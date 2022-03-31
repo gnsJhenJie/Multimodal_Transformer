@@ -1,0 +1,13 @@
+experiments/nuScene/models/*
+py3.6_env/
+experiments/nuScene/pandaset-devkit/
+data/*/
+.vscode/
+*.ipynb_checkpoints
+*.pt
+*.mp4
+*.png
+*.pyc
+*.csv
+*.txt
+*.idea
