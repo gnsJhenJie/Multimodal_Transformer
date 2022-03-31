@@ -78,13 +78,7 @@ if __name__ == "__main__":
                                  ] = float(attention_radius)
 
     scenes = env.scenes
-
-    print("-- Preparing Node Graph")
-    for scene in tqdm(scenes):
-        scene.calculate_scene_graph(env.attention_radius,
-                                    hyperparams['edge_addition_filter'],
-                                    hyperparams['edge_removal_filter'])
-
+    
     for ph in args.prediction_horizon:
         print(f"Prediction Horizon: {ph}")
         max_hl = hyperparams['maximum_history_length']

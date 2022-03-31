@@ -125,7 +125,6 @@ class MultimodalGenerativeCVAE(object):
                                                        layer_num=self.hyperparams['mlp_layer'],
                                                        mode='classification'))
         # Node History Encoder
-        x_size = self.hyperparams['enc_rnn_dim_history']
         if self.hyperparams['use_map_encoding']:
             fusion_layer_size = self.hyperparams['transformer']['output_size'] + map_output_size
             self.add_submodule(self.node_type+'/fusion/hist_map',
@@ -153,8 +152,6 @@ class MultimodalGenerativeCVAE(object):
                                                output_size=self.pred_state_length,
                                                layer_num=self.hyperparams['mlp_layer'],
                                                mode='regression'))
-
-        self.x_size = x_size
 
     def create_submodule(self, edge_types):
         """

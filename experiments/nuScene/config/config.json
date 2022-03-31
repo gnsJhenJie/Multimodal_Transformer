@@ -40,21 +40,6 @@
       "dropout": 0.5
     }
   },
-  "enc_rnn_dim_history": 32,
-  "enc_rnn_dim_future": 32,
-  "dec_rnn_dim": 128,
-  "GMM_components": 1,
-  "log_p_yt_xz_max": 6,
-  "N": 1,
-  "K": 1,
-  "tau_init": 2.0,
-  "tau_final": 0.05,
-  "tau_decay_rate": 0.997,
-  "use_z_logit_clipping": true,
-  "z_logit_clip_start": 0.05,
-  "z_logit_clip_final": 5.0,
-  "z_logit_clip_crossover": 300,
-  "z_logit_clip_divisor": 5,
   "state": {
     "PEDESTRIAN": {
       "position": [
@@ -97,20 +82,6 @@
       ]
     }
   },
-  "log_histograms": false,
-  "edge_state_combine_method": "sum",
-  "edge_influence_combine_method": "attention",
-  "edge_addition_filter": [
-    0.25,
-    0.5,
-    0.75,
-    1.0
-  ],
-  "edge_removal_filter": [
-    1.0,
-    0.0
-  ],
-  "offline_scene_graph": "yes",
   "node_freq_mult_train": true,
   "node_freq_mult_eval": false,
   "scene_freq_mult_train": false,

@@ -55,11 +55,6 @@ def main():
         hyperparams = json.load(conf_json)
 
     # Add hyperparams from arguments
-    hyperparams['edge_state_combine_method'] = args.edge_state_combine_method
-    hyperparams['edge_influence_combine_method'] = args.edge_influence_combine_method
-    hyperparams['edge_addition_filter'] = args.edge_addition_filter
-    hyperparams['edge_removal_filter'] = args.edge_removal_filter
-    hyperparams['offline_scene_graph'] = args.offline_scene_graph
     hyperparams['incl_robot_node'] = args.incl_robot_node
     hyperparams['node_freq_mult_train'] = args.node_freq_mult_train
     hyperparams['node_freq_mult_eval'] = args.node_freq_mult_eval
@@ -79,7 +74,6 @@ def main():
     print('| batch_size: %d' % args.batch_size)
     print('| device: %s' % args.device)
     print('| eval_device: %s' % args.eval_device)
-    print('| Offline Scene Graph Calculation: %s' % args.offline_scene_graph)
     print('| Learning rate %s' % hyperparams['learning_rate'])
     print('| Use Lane loss %s' % hyperparams['lane_loss'])
     print('| Autoregressive mode  %s' % hyperparams['autoregressive'])
@@ -193,21 +187,6 @@ def main():
             eval_data_loader[node_type_data_set.node_type] = node_type_dataloader
 
         print(f"Loaded evaluation data from {eval_data_path}")
-
-    # Offline Calculate Scene Graph
-    if hyperparams['offline_scene_graph'] == 'yes':
-        print(f"Offline calculating scene graphs")
-        for i, scene in enumerate(train_scenes):
-            scene.calculate_scene_graph(train_env.attention_radius,
-                                        hyperparams['edge_addition_filter'],
-                                        hyperparams['edge_removal_filter'])
-            print(f"Created Scene Graph for Training Scene {i}")
-
-        for i, scene in enumerate(eval_scenes):
-            scene.calculate_scene_graph(eval_env.attention_radius,
-                                        hyperparams['edge_addition_filter'],
-                                        hyperparams['edge_removal_filter'])
-            print(f"Created Scene Graph for Evaluation Scene {i}")
 
     model_registrar = ModelRegistrar(model_dir, args.device)
 

@@ -119,41 +119,6 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
     # Neighbors
     neighbors_data_st = None
     neighbors_edge_value = None
-    if hyperparams['edge_encoding']:
-        # Scene Graph
-        scene_graph = scene.get_scene_graph(t,
-                                            env.attention_radius,
-                                            hyperparams['edge_addition_filter'],
-                                            hyperparams['edge_removal_filter']) if scene_graph is None else scene_graph
-
-        neighbors_data_st = dict()
-        neighbors_edge_value = dict()
-        for edge_type in edge_types:
-            neighbors_data_st[edge_type] = list()
-            # We get all nodes which are connected to the current node for the current timestep
-            connected_nodes = scene_graph.get_neighbors(node, edge_type[1])
-
-            for connected_node in connected_nodes:
-                neighbor_state_np = connected_node.get(np.array([t - max_ht, t]),
-                                                       state[connected_node.type],
-                                                       padding=0.0)
-
-                # Make State relative to node where neighbor and node have same state
-                _, std = env.get_standardize_params(
-                    state[connected_node.type], node_type=connected_node.type)
-                std[0:2] = env.attention_radius[edge_type]
-                equal_dims = np.min((neighbor_state_np.shape[-1], x.shape[-1]))
-                rel_state = np.zeros_like(neighbor_state_np)
-                rel_state[:, ..., :equal_dims] = x[-1, ..., :equal_dims]
-                neighbor_state_np_st = env.standardize(neighbor_state_np,
-                                                       state[connected_node.type],
-                                                       node_type=connected_node.type,
-                                                       mean=rel_state,
-                                                       std=std)
-
-                neighbor_state = torch.tensor(
-                    neighbor_state_np_st, dtype=torch.float)
-                neighbors_data_st[edge_type].append(neighbor_state)
 
     # Robot
     robot_traj_st_t = None

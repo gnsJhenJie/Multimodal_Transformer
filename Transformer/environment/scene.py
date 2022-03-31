@@ -80,32 +80,7 @@ class Scene(object):
                                                             len(edge_removal_filter),
                                                             len(edge_addition_filter))
 
-    def calculate_scene_graph(self,
-                              attention_radius,
-                              edge_addition_filter=None,
-                              edge_removal_filter=None) -> None:
-        """
-        Calculate the Temporal Scene Graph for the entire Scene.
-
-        :param attention_radius: Attention radius for each node type permutation.
-        :param edge_addition_filter: Filter for adding edges.
-        :param edge_removal_filter: Filter for removing edges.
-        :return: None
-        """
-        timestep_range = np.array([0, self.timesteps-1])
-        node_pos_dict = dict()
-
-        for node in self.nodes:
-            if type(node) is MultiNode:
-                node_pos_dict[node] = np.squeeze(node.get_all(timestep_range, {'position': ['x', 'y']}))
-            else:
-                node_pos_dict[node] = np.squeeze(node.get(timestep_range, {'position': ['x', 'y']}))
-
-        self.temporal_scene_graph = TemporalSceneGraph.create_from_temp_scene_dict(node_pos_dict,
-                                                                                   attention_radius,
-                                                                                   duration=self.timesteps,
-                                                                                   edge_addition_filter=edge_addition_filter,
-                                                                                   edge_removal_filter=edge_removal_filter)
+    
 
     def duration(self):
         """
