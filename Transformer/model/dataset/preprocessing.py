@@ -133,12 +133,6 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
             # We get all nodes which are connected to the current node for the current timestep
             connected_nodes = scene_graph.get_neighbors(node, edge_type[1])
 
-            if hyperparams['dynamic_edges'] == 'yes':
-                # We get the edge masks for the current node at the current timestep
-                edge_masks = torch.tensor(
-                    scene_graph.get_edge_scaling(node), dtype=torch.float)
-                neighbors_edge_value[edge_type] = edge_masks
-
             for connected_node in connected_nodes:
                 neighbor_state_np = connected_node.get(np.array([t - max_ht, t]),
                                                        state[connected_node.type],

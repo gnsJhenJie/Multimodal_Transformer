@@ -55,12 +55,10 @@ def main():
         hyperparams = json.load(conf_json)
 
     # Add hyperparams from arguments
-    hyperparams['dynamic_edges'] = args.dynamic_edges
     hyperparams['edge_state_combine_method'] = args.edge_state_combine_method
     hyperparams['edge_influence_combine_method'] = args.edge_influence_combine_method
     hyperparams['edge_addition_filter'] = args.edge_addition_filter
     hyperparams['edge_removal_filter'] = args.edge_removal_filter
-    hyperparams['k_eval'] = args.k_eval
     hyperparams['offline_scene_graph'] = args.offline_scene_graph
     hyperparams['incl_robot_node'] = args.incl_robot_node
     hyperparams['node_freq_mult_train'] = args.node_freq_mult_train
@@ -275,7 +273,6 @@ def main():
 
                 # Stepping forward the learning rate scheduler and annealers.
                 lr_scheduler[node_type].step()
-                trajectron.node_models_dict[node_type].dynamic.reset_cur()
                 if not args.debug:
                     log_writer.add_scalar(f"{node_type}/train/learning_rate",
                                           lr_scheduler[node_type].get_last_lr()[

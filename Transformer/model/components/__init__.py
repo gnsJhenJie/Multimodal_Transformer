@@ -1,4 +1,3 @@
-from .discrete_latent import DiscreteLatent
 from .gmm2d import GMM2D
 from .map_encoder import CNNMapEncoder
 from .Lane_encoder import Lane_Encoder

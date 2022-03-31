@@ -40,20 +40,6 @@
       "dropout": 0.5
     }
   },
-  "k": 1,
-  "k_eval": 25,
-  "kl_min": 0.07,
-  "kl_weight": 100.0,
-  "kl_w5eight_start": 0,
-  "kl_decay_rate": 0.99995,
-  "kl_crossover": 400,
-  "kl_sigmoid_divisor": 4,
-  "rnn_kwargs": {
-    "dropout_keep_prob": 0.75
-  },
-  "MLP_dropout_keep_prob": 0.9,
-  "enc_rnn_dim_edge": 32,
-  "enc_rnn_dim_edge_influence": 32,
   "enc_rnn_dim_history": 32,
   "enc_rnn_dim_future": 32,
   "dec_rnn_dim": 128,
@@ -69,23 +55,6 @@
   "z_logit_clip_final": 5.0,
   "z_logit_clip_crossover": 300,
   "z_logit_clip_divisor": 5,
-  "dynamic": {
-    "PEDESTRIAN": {
-      "name": "SingleIntegrator",
-      "distribution": true,
-      "limits": {}
-    },
-    "VEHICLE": {
-      "name": "Linear",
-      "distribution": "True",
-      "limits": {
-        "max_a": 4,
-        "min_a": -5,
-        "max_heading_change": 0.7,
-        "min_heading_change": -0.7
-      }
-    }
-  },
   "state": {
     "PEDESTRIAN": {
       "position": [
@@ -129,7 +98,6 @@
     }
   },
   "log_histograms": false,
-  "dynamic_edges": "yes",
   "edge_state_combine_method": "sum",
   "edge_influence_combine_method": "attention",
   "edge_addition_filter": [

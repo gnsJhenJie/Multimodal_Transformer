@@ -7,7 +7,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-import model.dynamics as dynamic_module
 from environment.scene_graph import DirectedEdge
 
 
@@ -54,12 +53,6 @@ class MultimodalGenerativeCVAE(object):
 
         self.memory = None
         self.memory_mask = None
-
-        dynamic_class = getattr(
-            dynamic_module, hyperparams['dynamic'][self.node_type]['name'])
-        dyn_limits = hyperparams['dynamic'][self.node_type]['limits']
-        self.dynamic = dynamic_class(self.env.scenes[0].dt, dyn_limits, device,
-                                     self.model_registrar, self.x_size, self.node_type)
 
     def set_curr_iter(self, curr_iter):
         self.curr_iter = curr_iter
@@ -209,7 +202,6 @@ class MultimodalGenerativeCVAE(object):
         """
 
         candidate_lane = inputs_lane
-        initial_dynamics = dict()
 
         batch_size = inputs.shape[0]
 
@@ -221,11 +213,6 @@ class MultimodalGenerativeCVAE(object):
 
         node_history_st = inputs_st
         node_present_state_st = inputs_st[:, -1]
-
-        initial_dynamics['pos'] = node_pos
-        initial_dynamics['vel'] = node_vel
-
-        self.dynamic.set_initial_condition(initial_dynamics)
 
         ##################
         # Encode History #

@@ -22,11 +22,6 @@ parser.add_argument("--offline_scene_graph",
                     type=str,
                     default='yes')
 
-parser.add_argument("--dynamic_edges",
-                    help="whether to use dynamic edges or not, options are 'no' and 'yes'",
-                    type=str,
-                    default='yes')
-
 parser.add_argument("--edge_state_combine_method",
                     help="the method to use for combining edges of the same type",
                     type=str,
