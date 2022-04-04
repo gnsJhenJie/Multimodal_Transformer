@@ -216,7 +216,7 @@ def main():
             continue
         optimizer[node_type] = optim.AdamW([{'params': model_registrar.get_all_but_name_match('map_encoder').parameters()},
                                            {'params': model_registrar.get_name_match('map_encoder').parameters(), 'lr': 0.0008}], lr=hyperparams['learning_rate'])
-        print("\nmodel_parameter : ",model_registrar.model_dict)
+        # print("\nmodel_parameter : ",model_registrar.model_dict)
         # Set Learning Rate
         if hyperparams['learning_rate_style'] == 'const':
             lr_scheduler[node_type] = optim.lr_scheduler.ExponentialLR(

@@ -196,26 +196,26 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
     # Map
     map_tuple = None
     if hyperparams['use_map_encoding']:
-        if node.type in hyperparams['map_encoder']:
-            if node.non_aug_node is not None:
-                x = node.non_aug_node.get(np.array([t]), state[node.type])
-            me_hyp = hyperparams['map_encoder'][node.type]
-            if 'heading_state_index' in me_hyp:
-                heading_state_index = me_hyp['heading_state_index']
-                # We have to rotate the map in the opposit direction of the agent to match them
-                if type(heading_state_index) is list:  # infer from velocity or heading vector
-                    heading_angle = -np.arctan2(x[-1, heading_state_index[1]],
-                                                x[-1, heading_state_index[0]]) * 180 / np.pi
-                else:
-                    heading_angle = -x[-1, heading_state_index] * 180 / np.pi
+        
+        if node.non_aug_node is not None:
+            x = node.non_aug_node.get(np.array([t]), state[node.type])
+        me_hyp = hyperparams['map_encoder']['cnn_param']
+        if 'heading_state_index' in me_hyp:
+            heading_state_index = me_hyp['heading_state_index']
+            # We have to rotate the map in the opposit direction of the agent to match them
+            if type(heading_state_index) is list:  # infer from velocity or heading vector
+                heading_angle = -np.arctan2(x[-1, heading_state_index[1]],
+                                            x[-1, heading_state_index[0]]) * 180 / np.pi
             else:
-                heading_angle = None
+                heading_angle = -x[-1, heading_state_index] * 180 / np.pi
+        else:
+            heading_angle = None
 
-            scene_map = scene.map[node.type]
-            map_point = x[-1, :2]
+        scene_map = scene.map[node.type]
+        map_point = x[-1, :2]
 
-            patch_size = hyperparams['map_encoder'][node.type]['patch_size']
-            map_tuple = (scene_map, map_point, heading_angle, patch_size)
+        patch_size = hyperparams['map_encoder']['cnn_param']['patch_size']
+        map_tuple = (scene_map, map_point, heading_angle, patch_size)
 
     return (first_history_index, x_t, y_t, x_st_t, y_st_t, neighbors_data_st,
             neighbors_edge_value, robot_traj_st_t, lane_tuple, map_tuple)

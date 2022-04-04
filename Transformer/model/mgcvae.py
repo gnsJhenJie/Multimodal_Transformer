@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+from vit_pytorch import ViT
 from environment.scene_graph import DirectedEdge
 
 
@@ -80,8 +81,24 @@ class MultimodalGenerativeCVAE(object):
         ###################
         map_output_size = None
         if self.hyperparams['use_map_encoding']:
-            if self.node_type in self.hyperparams['map_encoder']:
-                me_params = self.hyperparams['map_encoder'][self.node_type]
+
+            if self.hyperparams['map_encoder']['transformer']:
+                me_params = self.hyperparams['map_encoder']['vit_param']
+                map_output_size = me_params['output_size']
+                self.add_submodule(self.node_type + '/map_encoder',
+                                   model_if_absent=ViT(
+                                                    image_size = me_params['image_size'],
+                                                    patch_size = me_params['patch_size'],
+                                                    num_classes = me_params['output_size'],
+                                                    dim = me_params['dim'],
+                                                    depth = me_params['deep'],
+                                                    heads = me_params['heads'],
+                                                    mlp_dim = me_params['mlp_dim'],
+                                                    dropout = me_params['dropout'],
+                                                    emb_dropout = me_params['emb_dropout']))
+            else:
+                me_params = self.hyperparams['map_encoder']['cnn_param']
+                map_output_size = me_params['output_size']
                 self.add_submodule(self.node_type + '/map_encoder',
                                    model_if_absent=CNNMapEncoder(me_params['map_channels'],
                                                                  me_params['hidden_channels'],
@@ -89,9 +106,7 @@ class MultimodalGenerativeCVAE(object):
                                                                  me_params['masks'],
                                                                  me_params['strides'],
                                                                  me_params['patch_size']))
-            map_output_size = me_params['output_size']
-
-        if self.hyperparams['lane_encoding']:
+        elif self.hyperparams['lane_encoding']:
             ###################
             #   lane Encoder  #
             ###################
@@ -224,18 +239,13 @@ class MultimodalGenerativeCVAE(object):
         # Map Encoding #
         ################
         encoded_map = None
-        if self.hyperparams['use_map_encoding'] and self.node_type in self.hyperparams['map_encoder']:
-            if self.log_writer and (self.curr_iter + 1) % 500 == 0:
-                map_clone = map.clone()
-                map_patch = self.hyperparams['map_encoder'][self.node_type]['patch_size']
-                map_clone[:, :, map_patch[1]-5:map_patch[1] +
-                          5, map_patch[0]-5:map_patch[0]+5] = 1.
-                self.log_writer.add_images(f"{self.node_type}/cropped_maps", map_clone, self.curr_iter, dataformats='NCWH')
-
-            encoded_map = self.node_modules[self.node_type + '/map_encoder'](map * 2. - 1., (mode == ModeKeys.TRAIN))
-            do = self.hyperparams['map_encoder'][self.node_type]['dropout']
-            encoded_map = F.dropout(encoded_map, do, training=(mode == ModeKeys.TRAIN))
-
+        if self.hyperparams['use_map_encoding']:
+            if self.hyperparams['map_encoder']['transformer']:
+                encoded_map = self.node_modules[self.node_type + '/map_encoder'](map * 2. - 1.)
+            else:
+                encoded_map = self.node_modules[self.node_type + '/map_encoder'](map * 2. - 1., (mode == ModeKeys.TRAIN))
+                do = self.hyperparams['map_encoder']['cnn_param']['dropout']
+                encoded_map = F.dropout(encoded_map, do, training=(mode == ModeKeys.TRAIN))
         #################
         # Lane Encoding #
         #################

@@ -8,8 +8,21 @@
   "prediction_horizon": 8,
   "minimum_history_length": 8,
   "maximum_history_length": 8,
+  "use_map_encoding": true,
   "map_encoder": {
-    "VEHICLE": {
+    "transformer" : true,
+    "vit_param":{
+      "image_size": 100,
+      "patch_size": 25,
+      "output_size": 32,
+      "dim" : 256,
+      "deep" : 6,
+      "heads" : 8,
+      "mlp_dim" : 512,
+      "dropout" : 0.1,
+      "emb_dropout" : 0.1
+    },
+    "cnn_param": {
       "heading_state_index": 6,
       "patch_size": [
         50,
@@ -87,7 +100,6 @@
   "scene_freq_mult_train": false,
   "scene_freq_mult_eval": false,
   "scene_freq_mult_viz": false,
-  "use_map_encoding": true,
   "augment": true,
   "lane_encoding": false,
   "lane_loss": false,

@@ -6,7 +6,7 @@ The Directory of our project.
     ${Trajectron root}
     ├── data
     ├── experiments
-    ├── trajectron_attention_model
+    ├── Transformer
     ├── README.md
     └── requirements.txt
 
@@ -59,14 +59,14 @@ To preprocess the nuScenes data, you can execute the command below in `offline_p
 | Typo preprocess| Command|
 |:---|:---|
 | Map preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data'```|
-| Lane preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data' --process_lane```|
+| Lane preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data' --process_lane``` (not finish)|
 
 ## Training
 
     ${Trajectron root}
-    ├── trajectron_attention_model
+    ├── Transformer
 
-To train a model with nuScene data, you can execute the command below in `trajectron_attention_model` directory, depending on the model version you desire.<br></br>
+To train a model with nuScene data, you can execute the command below in `Transformer` directory, depending on the model version you desire.<br></br>
 | Model| Command|
 |:---|:---|
 | Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag _int_ee --augment```|

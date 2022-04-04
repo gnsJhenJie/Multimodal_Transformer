@@ -64,7 +64,6 @@ class Trajectron(object):
          _,
          robot_traj_st_t,
          lanes, map) = batch
-
         # Turn lane data into tensor
         # [batch_size, lane_num, length, feature_dim]
         if self.hyperparams['lane_loss']:
@@ -114,10 +113,17 @@ class Trajectron(object):
          robot_traj_st_t,
          lanes, map) = batch
 
-        lane_mask = None
-        lane_input = None
-        lane_label = None
-        lane_t_mask = None
+        if self.hyperparams['lane_loss']:
+            lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
+            # [batch_size, lane_num, 1] one-hot encoding
+            lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
+            lane_label = torch.stack(lanes[2]).to(self.device)
+            lane_t_mask = torch.stack(lanes[3]).to(self.device)
+        else:
+            lane_mask = None
+            lane_input = None
+            lane_label = None
+            lane_t_mask = None
         x = x_t.to(self.device)
         y = y_t.to(self.device)
 
@@ -176,19 +182,15 @@ class Trajectron(object):
             lanes, map), nodes, timesteps_o = batch
             # print('lanes : ',lanes[2])
 
-            # Turn lane data into tensor
-            # [batch_size, lane_num, length, feature_dim]
-            # lane_mask = torch.tensor(
-            #     lanes[0], dtype=torch.bool, device=self.device)
-            # # [batch_size, lane_num, 1] one-hot encoding
-            # lane_input = torch.tensor(
-            #     np.array(lanes[1]), device=self.device, dtype=torch.float)
-            # lane_label = torch.stack(lanes[2]).to(self.device)
-            # lane_t_mask = torch.stack(lanes[3]).to(self.device)
-            lane_mask = None
-            lane_input = None
-            lane_label = None
-            lane_t_mask = None
+            if self.hyperparams['lane_loss']:
+                lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
+                # [batch_size, lane_num, 1] one-hot encoding
+                lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
+                lane_t_mask = torch.stack(lanes[3]).to(self.device)
+            else:
+                lane_mask = None
+                lane_input = None
+                lane_t_mask = None
 
             x = x_t.to(self.device)
             x_st_t = x_st_t.to(self.device)

@@ -12,7 +12,7 @@ from pathlib import Path
 
 nu_path = './devkit/python-sdk/'
 sys.path.append(nu_path)
-sys.path.append("../../trajectron_attention_model")
+sys.path.append("../../Transformer")
 
 from environment import Environment, Scene, Node, GeometricMap, derivative_of
 from nuscenes.utils.splits import create_splits_scenes
@@ -206,9 +206,9 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
             else:
                 continue
 
-            if 'pedestrian' in category and not 'stroller' in category and not 'wheelchair' in category:
-                our_category = env.NodeType.PEDESTRIAN
-            elif 'vehicle' in category and 'bicycle' not in category and 'motorcycle' not in category and 'parked' not in attribute:
+            # if 'pedestrian' in category and not 'stroller' in category and not 'wheelchair' in category:
+            #     our_category = env.NodeType.PEDESTRIAN
+            if 'vehicle' in category and 'bicycle' not in category and 'motorcycle' not in category and 'parked' not in attribute:
                 our_category = env.NodeType.VEHICLE
             else:
                 continue
