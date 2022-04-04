@@ -21,7 +21,7 @@ The setting of nuScenes dataset is quite complicate. So we zip the *FULL* Datase
 
 Download nuScene dataset:
 
-> ```wget --no-check-certificate -O dataset.zip"https://140.115.54.247/share.cgissid=2f7bb2e3f7ea4444903cee95da46207c&fid=2f7bb2e3f7ea4444903cee95da46207c&filename=data.zip&openfolder=forcedownload&ep="```
+> ```wget --no-check-certificate -O dataset.tar.zx"https://140.115.54.247/share.cgi?ssid=29b79213862b4827b5e6bacfcd784041&fid=29b79213862b4827b5e6bacfcd784041&filename=nuscenes.tar.xz&openfolder=forcedownload&ep=="```
     
 # Create Training Environment
 
