@@ -56,7 +56,7 @@ For nuScenes devkit.
 
     ${Trajectron root}
     `-- experiments
-        `--offline_process
+        `--nuScene
         
 To preprocess the nuScenes data, you can execute the command below in `offline_process` directory, depending on the data version you desire.<br></br>
 | Typo preprocess| Command|
@@ -80,7 +80,7 @@ To train a model with nuScene data, you can execute the command below in `Transf
     
     ${Trajectron root}
     ├── experiments
-        `-- offline_process
+        `-- nuScene
         
 If you want to evaluate the trained model to generate trajectories and plot them, you can use `NuScenes Qualitative.ipynb` norebook.<br></br>
 To evaluate a trained model's performance on forecasting vehicles, you can execute a one of the following commands from within the `experiments/nuScenes` directory.
