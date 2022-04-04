@@ -66,6 +66,7 @@ def main():
     hyperparams['augment'] = args.augment
     hyperparams['override_attention_radius'] = args.override_attention_radius
     hyperparams['Transformer'] = True
+    hyperparams['map_encoder']['transformer'] = args.vit
     hyperparams['autoregressive'] = args.autoregressive
 
     print('-----------------------')
@@ -77,6 +78,7 @@ def main():
     print('| Learning rate %s' % hyperparams['learning_rate'])
     print('| Use Lane loss %s' % hyperparams['lane_loss'])
     print('| Autoregressive mode  %s' % hyperparams['autoregressive'])
+    print('| vision transformer mode  %s' % hyperparams['map_encoder']['transformer'])
     print('| MHL: %s' % hyperparams['minimum_history_length'])
     print('| PH: %s' % hyperparams['prediction_horizon'])
     print('-----------------------')
@@ -85,8 +87,7 @@ def main():
     model_dir = None
     if not args.debug:
         # Create the log and model directiory if they're not present.
-        model_dir = os.path.join(args.log_dir,
-                                 'lane_transformers_' + args.log_tag)
+        model_dir = os.path.join(args.log_dir, args.log_tag)
         pathlib.Path(model_dir).mkdir(parents=True, exist_ok=True)
 
         # Save config to model directory

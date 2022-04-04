@@ -69,9 +69,9 @@ To preprocess the nuScenes data, you can execute the command below in `offline_p
 To train a model with nuScene data, you can execute the command below in `Transformer` directory, depending on the model version you desire.<br></br>
 | Model| Command|
 |:---|:---|
-| Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag _int_ee --augment```|
-| Map_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag _int_ee --augment```|
-| Map_encoding_ViT |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag _int_ee --augment```|
+| Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag basic_transformer --augment --autoregressive```(not finish)|
+| Map_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag cnn_transformer --augment --autoregressive ```|
+| Map_encoding_ViT |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/offline_process/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/offline_process/models --train_epochs 20 --node_freq_mult_train --log_tag vit_transformer --augment --autoregressive --vit```|
 
 # Evaluate Progress
     
@@ -84,9 +84,9 @@ To evaluate a trained model's performance on forecasting vehicles, you can execu
     
 | Model| Command|
 |:---|:---|
-| Basic |```python evaluate.py --model models/lane_transformer --checkpoint=15 --data ../processed_data/nuScenes_test_full.pkl --output_path results --output_tag lane_transformer --node_type VEHICLE --prediction_horizon 6```|
-| Map_encoding_CNN |```python evaluate.py --model models/lane_transformer --checkpoint=15 --data ../processed_data/nuScenes_test_full.pkl --output_path results --output_tag lane_transformer --node_type VEHICLE --prediction_horizon 6```|
-| Map_encoding_ViT |```python evaluate.py --model models/lane_transformer --checkpoint=15 --data ../processed_data/nuScenes_test_full.pkl --output_path results --output_tag lane_transformer --node_type VEHICLE --prediction_horizon 6```|
+| Basic |```python evaluate.py --model models/basic_transformer --checkpoint=20 --data ../processed_data/nuScenes_testmap_full.pkl --output_path results --output_tag basic_transformer --node_type VEHICLE --prediction_horizon 8```|
+| Map_encoding_CNN |```python evaluate.py --model models/cnn_transformer --checkpoint=20 --data ../processed_data/nuScenes_testmap_full.pkl --output_path results --output_tag cnn_transformer --node_type VEHICLE --prediction_horizon 8```|
+| Map_encoding_ViT |```python evaluate.py --model models/vit_transformer --checkpoint=20 --data ../processed_data/nuScenes_testmap_full.pkl --output_path results --output_tag vit_transformer --node_type VEHICLE --prediction_horizon 8```|
 
 # TODO
 - [ ] Rename Folders and command.

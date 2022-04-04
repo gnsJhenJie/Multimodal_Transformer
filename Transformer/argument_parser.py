@@ -58,6 +58,11 @@ parser.add_argument('--no_edge_encoding',
                     help="Whether to use neighbors edge encoding",
                     action='store_true')
 
+parser.add_argument('--vit',
+                    help="Whether to use neighbors edge encoding",
+                    action='store_true')
+
+
 # Data Parameters
 parser.add_argument("--data_dir",
                     help="what dir to look in for data",
@@ -68,16 +73,6 @@ parser.add_argument("--data_name",
                     help="what file to load for training data",
                     type=str,
                     default='nuScenes')
-
-# parser.add_argument("--train_data_dict",
-#                     help="what file to load for training data",
-#                     type=str,
-#                     default='train.pkl')
-
-# parser.add_argument("--eval_data_dict",
-#                     help="what file to load for evaluation data",
-#                     type=str,
-#                     default='val.pkl')
 
 parser.add_argument("--log_dir",
                     help="what dir to save training information (i.e., saved models, logs, etc)",
