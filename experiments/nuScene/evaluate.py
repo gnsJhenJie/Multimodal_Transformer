@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import pandas as pd
 
-sys.path.append("../../trajectron_attention_model")
+sys.path.append("../../Transformer")
 
 from tqdm import tqdm
 from model.model_registrar import ModelRegistrar
