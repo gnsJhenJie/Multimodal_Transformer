@@ -61,8 +61,8 @@ For nuScenes devkit.
 To preprocess the nuScenes data, you can execute the command below in `offline_process` directory, depending on the data version you desire.<br></br>
 | Typo preprocess| Command|
 |:---|:---|
-| Map preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data'```|
-| Lane preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data' --process_lane``` (not finish)|
+| Map preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data```|
+| Lane preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data --process_lane``` (not finish)|
 
 ## Training
 
