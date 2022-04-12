@@ -149,7 +149,7 @@ def augment_scene(scene, angle, lane_process):
             node = Node(node_type=node.type, node_id=node.id, data=node_data, first_timestep=node.first_timestep,
                         non_aug_node=node)
 
-            if lane_process:
+            if lane_process and node.have_lane:
                 lanes = node.lanes_point
                 lane_id = node.lanes_id
                 total_rot_lanes = []
@@ -259,8 +259,9 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
     y_max = np.round(data['y'].max() + 50)
 
     # data been standarized
-    data['x'] = data['x'] - x_min
-    data['y'] = data['y'] - y_min
+    if not lane_process:
+        data['x'] = data['x'] - x_min
+        data['y'] = data['y'] - y_min
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id), aug_func=augment)
 
@@ -302,6 +303,7 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
+        
 
         if node_df['x'].shape[0] < 2:
             continue
@@ -309,10 +311,18 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         if not np.all(np.diff(node_df['frame_id']) == 1):
             # print('Occlusion')
             continue  # TODO Make better
-
+        
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
-        y = node_values[:, 1]
+        y = node_values[:, 1]    
+
+        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process:
+            agent_points = node_values[:, :2]
+            valid_lane, total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
+            # print("valid_lane : ",valid_lane)
+            if not valid_lane:
+                continue
+
         heading = node_df['heading'].values
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and not node_id == 'ego':
             # Kalman filter Agent
@@ -408,12 +418,8 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
 
         node = Node(node_type=node_df.iloc[0]['type'], node_id=node_id, data=node_data, frequency_multiplier=node_frequency_multiplier)
         node.first_timestep = node_df['frame_id'].iloc[0]
-        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process:
-            agent_points = node_values[:, :2]
 
-            # Get lanes id
-            print('map_name : ', map_name)
-            total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
+        if lane_process:
             node.get_lane_id(total_lanes_point, total_lanes_id)
 
         if node_df.iloc[0]['robot'] == True:
@@ -472,9 +478,9 @@ def process_data(data_path, version, output_path, val_split, lane_process):
         if len(scenes) > 0:
             Path(output_path).mkdir(parents=True, exist_ok=True)
             if lane_process:
-                name = 'nuScenes_' + data_class + 'lane_full.pkl'
+                name = 'nuScenes_' + data_class + '_lane_full.pkl'
             else:
-                name = 'nuScenes_' + data_class + 'map_full.pkl'
+                name = 'nuScenes_' + data_class + '_map_full.pkl'
             data_dict_path = os.path.join(output_path, name)
             with open(data_dict_path, 'wb') as f:
                 dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)

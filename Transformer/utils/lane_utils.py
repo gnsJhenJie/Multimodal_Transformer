@@ -200,6 +200,7 @@ def get_nearest_lane(nusc_map, lane_dict, lanes_id, agent):
     out_goings = nusc_map.get_outgoing_lane_ids(closest_lane)
     if len(out_goings) == 0:
         raise other_error('get_nearest_lane no outgoing lane!')
+
     lane_class = lane_dict[closest_lane]
 
     # delete it for not effecting the region determination
@@ -353,13 +354,13 @@ def get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius, angle_thr
                 nusc_map, agent_points[i],lane_dict, lanes_id, resolution_meters, sample_num))
             total_lane_boolean.append(lane_exist)
     except other_error as error:
-        print(error)
-        return np.zeros((length_t, 3, sample_num, 2)),np.zeros((length_t),dtype=bool)
+        # print(error)
+        return False, np.zeros((length_t, 3, sample_num, 2)),np.zeros((length_t),dtype=bool)
     except:
-        print("Other exceptions!")
-        return np.zeros((length_t, 3, sample_num, 2)),np.zeros((length_t),dtype=bool)
+        # print("Other exceptions!")
+        return False, np.zeros((length_t, 3, sample_num, 2)),np.zeros((length_t),dtype=bool)
 
-    return np.array(total_lanes_set_point), np.array(total_lane_boolean)
+    return True, np.array(total_lanes_set_point), np.array(total_lane_boolean)
 
 # if name == '__main__' :
 
