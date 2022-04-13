@@ -65,7 +65,7 @@ To preprocess the nuScenes data, you can execute the command below in `nuScene` 
 | Map preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data```|
 | Lane preprocess |```python3 nuScenes_process_data.py --data=../../data/sets/nuscenes/v1.0/ --version=v1.0-trainval --output_path=../processed_data --lane_process```|
 
-## Training (uncheck)
+## Training
 
     ${Trajectron root}
     ├── Transformer
@@ -76,7 +76,7 @@ To train a model with nuScene data, you can execute the command below in `Transf
 | Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag basic_transformer --augment --autoregressive```|
 | Map_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag CNN_transformer --augment --autoregressive --map_cnn_encoding ```|
 | Map_encoding_ViT |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag ViT_transformer --augment --autoregressive --map_vit_encoding```|
-| Lane_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag Lane_transformer --augment --autoregressive --lane_cnn_encoding```|
+| Lane_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag Lane_transformer --augment --autoregressive --lane_cnn_encoding``` (uncheck)|
 
 # Evaluate Progress (uncheck)
     

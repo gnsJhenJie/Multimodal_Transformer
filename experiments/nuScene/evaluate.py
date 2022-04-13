@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
                 eval_road_viols_batch = []
                 
-                if hyperparams['lane_loss']:
+                if hyperparams['lane_cnn_encoding']:
                     lane_prediction_dict, _, _ = utils.lane_prediction_output_to_trajectories(lane_pred,
                                                                                         scene.dt,
                                                                                         max_hl,
@@ -144,13 +144,14 @@ if __name__ == "__main__":
                                                                         map=None,
                                                                         prune_ph_to_future=False)
                 
-                # lane_batch_error_dict = evaluation.lane_compute_batch_statistics(lane_pred,
-                #                                                        scene.dt,
-                #                                                        max_hl=max_hl,
-                #                                                        ph=ph,
-                #                                                        node_type_enum=env.NodeType,
-                #                                                        map=None,
-                #                                                        prune_ph_to_future=False)
+                    # lane_batch_error_dict = evaluation.lane_compute_batch_statistics(lane_pred,
+                    #                                                        scene.dt,
+                    #                                                        max_hl=max_hl,
+                    #                                                        ph=ph,
+                    #                                                        node_type_enum=env.NodeType,
+                    #                                                        map=None,
+                    #                                                        prune_ph_to_future=False)
+                    
                     print('ADE : ',batch_error_dict[args.node_type]['ade'])
                     eval_ade_batch_errors = np.hstack(
                         (eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))

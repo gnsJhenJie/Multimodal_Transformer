@@ -39,11 +39,10 @@ def collate(batch):
                                                                      patch_size=patch_size[0],
                                                                      rotation=heading_angle)
             return map
-            # lane_exist, lane_t_points, y_lane, lane_mask = zip(*batch)
-            # return [lane_exist, lane_t_points, y_lane, lane_mask]
-        # elif len(elem) == 2:
-        #     lane, y_lane = zip(*batch)
-        #     return [lane, y_lane]
+        elif len(elem) == 3:
+            lanes_t_points, y_lane, lane_mask = zip(*batch)
+            return [lanes_t_points, y_lane, lane_mask]
+
         transposed = zip(*batch)
         return [collate(samples) for samples in transposed]
     elif isinstance(elem, container_abcs.Mapping):
@@ -91,7 +90,6 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
     :param scene_graph: If scene graph was already computed for this scene and time you can pass it here
     :return: Batch Element
     """
-
     # Node
     timestep_range_x = np.array([t - max_ht, t])
     timestep_range_y = np.array([t + 1, t + max_ft])
@@ -135,67 +133,10 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
         robot_traj_st_t = get_relative_robot_traj(
             env, state, x_node, robot_traj, node.type, robot_type)
 
-    
-    
-    lane_tuple = None
-    if hyperparams['lane_encoding']:# Lane
-        lanes_t_points = None
-        lane_exist = True
-        lane_mask = None
-        y_lane = torch.tensor([0]*max_ft, dtype=torch.float)
-        # TODO get Lane_label and lane need to be normalize
-        def get_gt_lane(point, lane_t_points):
-            min_dis = []
-            distance = 1e10
-            for lanes_points in lane_t_points:
-                # ADD if to determine if lane exist
-                # current position to line distance using Parallelogram area calc 行列式算面積 透過底乘高 算出點與線的垂直距離
-                
-                # if lane isn't exist(point will be -100)
-                p1 = lanes_points[0]
-                p2 = lanes_points[1]
-                lane_vector = np.linalg.norm(p2-p1)
-                if not lane_vector:
-                    # print('lane_vector : ',lane_vector)
-                    min_dis.append(1e10)
-                else:
-                    distance = np.abs(np.cross(p2-p1, point-p1)) / \
-                        np.abs(lane_vector)
-                    min_dis.append(distance)
-
-            return np.argmin(min_dis)
-
-        index = node.history_points_at(t) - 1
-        total_lanes_points = node.lanes_point
-        total_lanes_boolean = node.lanes_id
-        future_lane_boolean = total_lanes_boolean[index + 1:index + 1 + max_ft]
-        if len(future_lane_boolean) < 6 :
-            lane_exist = False
-        else: 
-            for i in range(max_ft):
-                if future_lane_boolean[i]:
-                    lane_exist = True
-                else:
-                    lane_exist = False
-                    break
-            lanes_t_points = np.array(total_lanes_points[index])
-
-        if lane_exist:
-            lane_mask = torch.tensor(np.linalg.norm(lanes_t_points[:, 0] - lanes_t_points[:, 1],axis=1) ,dtype=torch.bool)
-            y_lane = []
-            for i, point in enumerate(y):
-                y_lane.append(get_gt_lane(point, lanes_t_points))
-            temp = np.array([0,0,0])
-            temp[y_lane[-1]] = 1
-            y_lane = torch.tensor(temp, dtype=torch.float)
-        else:
-            y_lane = torch.tensor(np.array([0,0,0]), dtype=torch.float)
-            lane_mask = torch.tensor(np.array([0,0,0]),dtype=torch.bool)
-        lane_tuple = (lane_exist, lanes_t_points, y_lane, lane_mask)
-
     # Map
     map_tuple = None
-    if hyperparams['use_map_encoding']:
+    lane_tuple = None
+    if hyperparams['map_cnn_encoding'] or hyperparams['map_vit_encoding']:
         
         if node.non_aug_node is not None:
             x = node.non_aug_node.get(np.array([t]), state[node.type])
@@ -216,6 +157,30 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
 
         patch_size = hyperparams['map_encoder']['cnn_param']['patch_size']
         map_tuple = (scene_map, map_point, heading_angle, patch_size)
+    # Lane
+    elif hyperparams['lane_cnn_encoding']:
+        # TODO get Lane_label and lane need to be normalize
+        print(node)
+        def get_gt_lane(point, lane_t_points):
+            min_dis = []
+            distance = 1e10
+            for lanes_points in lane_t_points:
+                distance = np.abs(np.cross(p2-p1, point-p1)) / \
+                    np.abs(lane_vector)
+                min_dis.append(distance)
+
+            return np.argmin(min_dis)
+        index = node.history_points_at(t) - 1
+        total_lanes_points = node.lanes_point
+        lanes_t_points = np.array(total_lanes_points[index])
+        lane_mask = torch.tensor(np.linalg.norm(lanes_t_points[:, 0] - lanes_t_points[:, 1],axis=1) ,dtype=torch.bool)
+        y_lane = []
+        for i, point in enumerate(y):
+            temp = np.array([0,0,0])
+            temp[get_gt_lane(point, lanes_t_points)] = 1
+            y_lane.append(temp)
+        y_lane = torch.tensor(y_lane, dtype=torch.float)
+        lane_tuple = (lanes_t_points, y_lane, lane_mask)
 
     return (first_history_index, x_t, y_t, x_st_t, y_st_t, neighbors_data_st,
             neighbors_edge_value, robot_traj_st_t, lane_tuple, map_tuple)

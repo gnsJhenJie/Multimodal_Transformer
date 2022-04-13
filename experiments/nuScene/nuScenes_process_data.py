@@ -145,19 +145,21 @@ def augment_scene(scene, angle, lane_process):
                          ('heading', 'd°'): derivative_of(heading, dt, radian=True)}
 
             node_data = pd.DataFrame(data_dict, columns=data_columns_vehicle)
-
-            node = Node(node_type=node.type, node_id=node.id, data=node_data, first_timestep=node.first_timestep,
-                        non_aug_node=node)
-
-            if lane_process and node.have_lane:
+            total_rot_lanes = []
+            lane_id = None
+            if lane_process:
                 lanes = node.lanes_point
                 lane_id = node.lanes_id
-                total_rot_lanes = []
                 #(t, 3, 16, 2)
                 for t_lanes in lanes:
                     # (3, 16, 2) -> (3, 2, 16) -> (3, 16, 2)
                     rotate_lanes_point = [np.transpose(rotate_pc(np.transpose(t_lane), alpha)) for t_lane in t_lanes]
                     total_rot_lanes.append(rotate_lanes_point)
+
+            node = Node(node_type=node.type, node_id=node.id, data=node_data, first_timestep=node.first_timestep,
+                        non_aug_node=node)
+
+            if lane_process:
                 node.get_lane_id(total_rot_lanes, lane_id)
 
         scene_aug.nodes.append(node)
@@ -303,7 +305,6 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
-        
 
         if node_df['x'].shape[0] < 2:
             continue
@@ -315,13 +316,6 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
         y = node_values[:, 1]    
-
-        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process:
-            agent_points = node_values[:, :2]
-            valid_lane, total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
-            # print("valid_lane : ",valid_lane)
-            if not valid_lane:
-                continue
 
         heading = node_df['heading'].values
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and not node_id == 'ego':
@@ -419,7 +413,11 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         node = Node(node_type=node_df.iloc[0]['type'], node_id=node_id, data=node_data, frequency_multiplier=node_frequency_multiplier)
         node.first_timestep = node_df['frame_id'].iloc[0]
 
-        if lane_process:
+        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process :
+            agent_points = node_values[:, :2]
+            valid_lane, total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
+            if not valid_lane:
+                continue
             node.get_lane_id(total_lanes_point, total_lanes_id)
 
         if node_df.iloc[0]['robot'] == True:
@@ -429,7 +427,6 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         scene.nodes.append(node)
 
     return scene
-
 
 def process_data(data_path, version, output_path, val_split, lane_process):
     nusc = NuScenes(version=version, dataroot=data_path, verbose=True)

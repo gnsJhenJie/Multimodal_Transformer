@@ -177,11 +177,10 @@ def obs_violation_rate(predicted_trajs, groundtruth_trajs, map, heading_angle, c
 
     return viol_rate
 
-def classification_loss(lane_t_mask, lane_mask, lane_label, lane_attn):
+def classification_loss(lane_label, lane_attn):
+    # lane_label [256, prediction_horizon, 3] lane_attn [256, prediction_horizon, 3]
     # L_classification > 0 cross entropy p_i*log(p_hat_i), => p_hat_i using softmax
     cls_loss = torch.mul(lane_label, torch.log(lane_attn))
-    cls_loss = cls_loss*lane_t_mask
-    cls_loss = cls_loss*lane_mask.clone().view(lane_mask.size()[0], 1)
     cls_loss = torch.sum(cls_loss)
     cls_loss = (-1)*cls_loss
 

@@ -62,11 +62,11 @@ def main():
     hyperparams['scene_freq_mult_eval'] = args.scene_freq_mult_eval
     hyperparams['scene_freq_mult_viz'] = args.scene_freq_mult_viz
     hyperparams['edge_encoding'] = False
-    # hyperparams['use_map_encoding'] = args.map_encoding
+    hyperparams['map_cnn_encoding'] = args.map_cnn_encoding
+    hyperparams['map_vit_encoding'] = args.map_vit_encoding
+    hyperparams['lane_cnn_encoding'] = args.lane_cnn_encoding
     hyperparams['augment'] = args.augment
     hyperparams['override_attention_radius'] = args.override_attention_radius
-    hyperparams['Transformer'] = True
-    hyperparams['map_encoder']['transformer'] = args.vit
     hyperparams['autoregressive'] = args.autoregressive
 
     print('-----------------------')
@@ -76,9 +76,15 @@ def main():
     print('| device: %s' % args.device)
     print('| eval_device: %s' % args.eval_device)
     print('| Learning rate %s' % hyperparams['learning_rate'])
-    print('| Use Lane loss %s' % hyperparams['lane_loss'])
     print('| Autoregressive mode  %s' % hyperparams['autoregressive'])
-    print('| vision transformer mode  %s' % hyperparams['map_encoder']['transformer'])
+    if hyperparams['map_cnn_encoding']:
+        print('| CNN encoding mode  %s' % hyperparams['map_cnn_encoding'])
+    elif hyperparams['map_vit_encoding']:
+        print('| Vision transformer encoding mode  %s' % hyperparams['map_vit_encoding'])
+    elif hyperparams['lane_cnn_encoding']:
+        print('| CNN encoding lane mode  %s' % hyperparams['lane_cnn_encoding'])
+    else:
+        print('| Basic mode (No Map Information Encoding)  True')
     print('| MHL: %s' % hyperparams['minimum_history_length'])
     print('| PH: %s' % hyperparams['prediction_horizon'])
     print('-----------------------')
@@ -98,10 +104,10 @@ def main():
 
     # Load training and evaluation environments and scenes
     train_scenes = []
-    if hyperparams['use_map_encoding']:
-        train_data_name = args.data_name + "_train" + "map" + "_full.pkl"
+    if hyperparams['lane_cnn_encoding']:
+        train_data_name = args.data_name + "_train" + "_lane" + "_full.pkl"
     else:
-        train_data_name = args.data_name + "_train" + "lane" + "_full.pkl"
+        train_data_name = args.data_name + "_train" + "_map" + "_full.pkl"
     train_data_path = os.path.join(args.data_dir, train_data_name)
     with open(train_data_path, 'rb') as f:
         train_env = dill.load(f, encoding='latin1')
@@ -145,10 +151,10 @@ def main():
     eval_scenes = []
     eval_scenes_sample_probs = None
     if args.eval_every is not None:
-        if hyperparams['use_map_encoding']:
-            test_data_name = args.data_name + "_test" + "map" + "_full.pkl"
+        if hyperparams['lane_cnn_encoding']:
+            test_data_name = args.data_name + "_val" + "_lane" + "_full.pkl"
         else:
-            test_data_name = args.data_name + "_test" + "lane" + "_full.pkl"
+            test_data_name = args.data_name + "_val" + "_map" + "_full.pkl"
         eval_data_path = os.path.join(args.data_dir, test_data_name)
         with open(eval_data_path, 'rb') as f:
             eval_env = dill.load(f, encoding='latin1')
@@ -242,8 +248,8 @@ def main():
             for batch in pbar:
                 trajectron.set_curr_iter(curr_iter)
                 optimizer[node_type].zero_grad()
-                train_loss = trajectron.train_loss(batch, node_type)
-                pbar.set_description(f"Epoch {epoch}, {node_type} L: {train_loss.item()*80:.4f}")
+                train_loss, reg_loss = trajectron.train_loss(batch, node_type)
+                pbar.set_description(f"Epoch {epoch}, {node_type} L: {reg_loss.item()*80:.4f}")
                 train_loss.backward()
                 # Clipping gradients.
                 if hyperparams['grad_clip'] is not None:
@@ -363,9 +369,9 @@ def main():
                     print(f"Starting Evaluation @ epoch {epoch} for node type: {node_type}")
                     pbar = tqdm(data_loader, ncols=80)
                     for batch in pbar:
-                        eval_loss_node_type = eval_trajectron.eval_loss(
+                        eval_loss_node_type, reg_loss = eval_trajectron.eval_loss(
                             batch, node_type)
-                        pbar.set_description(f"Epoch {epoch}, {node_type} L: {eval_loss_node_type.item():.4f}")
+                        pbar.set_description(f"Epoch {epoch}, {node_type} L: {reg_loss.item():.4f}")
                         eval_loss.append(
                             {node_type: {'nll': [eval_loss_node_type]}})
                         del batch

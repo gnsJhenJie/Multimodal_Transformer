@@ -15,7 +15,8 @@ class Node(object):
         self.height = height
         self.first_timestep = first_timestep
         self.non_aug_node = non_aug_node
-        self.have_lane = False
+        self.lanes_point = None
+        self.lanes_id = None
 
         if data is not None:
             if isinstance(data, pd.DataFrame):
@@ -101,7 +102,6 @@ class Node(object):
         return padded_data_array
     
     def get_lane_id(self, lanes_point, lanes_id):
-        self.have_lane = True
         self.lanes_id = lanes_id
         self.lanes_point = lanes_point
     

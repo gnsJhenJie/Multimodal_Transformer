@@ -57,7 +57,6 @@ class Trajectron(object):
 
 
     def train_loss(self, batch, node_type):
-
         (_,
          x_t, y_t, x_st_t, y_st_t,
          _,
@@ -66,7 +65,7 @@ class Trajectron(object):
          lanes, map) = batch
         # Turn lane data into tensor
         # [batch_size, lane_num, length, feature_dim]
-        if self.hyperparams['lane_loss']:
+        if self.hyperparams['lane_cnn_encoding']:
             lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
             # [batch_size, lane_num, 1] one-hot encoding
             lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
@@ -91,7 +90,7 @@ class Trajectron(object):
 
         # Run forward pass
         model = self.node_models_dict[node_type]
-        loss = model.train_loss(inputs=x,
+        loss, reg_loss = model.train_loss(inputs=x,
                                 inputs_st=x_st_t,
                                 inputs_lane=lane_input,
                                 lane_label=lane_label,
@@ -102,7 +101,7 @@ class Trajectron(object):
                                 map=map,
                                 prediction_horizon=self.ph)
 
-        return loss
+        return loss, reg_loss
 
     def eval_loss(self, batch, node_type):
 
@@ -113,7 +112,7 @@ class Trajectron(object):
          robot_traj_st_t,
          lanes, map) = batch
 
-        if self.hyperparams['lane_loss']:
+        if self.hyperparams['lane_cnn_encoding']:
             lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
             # [batch_size, lane_num, 1] one-hot encoding
             lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
@@ -124,6 +123,7 @@ class Trajectron(object):
             lane_input = None
             lane_label = None
             lane_t_mask = None
+
         x = x_t.to(self.device)
         y = y_t.to(self.device)
 
@@ -136,7 +136,7 @@ class Trajectron(object):
 
         # Run forward pass
         model = self.node_models_dict[node_type]
-        loss = model.eval_loss(node_type,
+        loss, reg_loss = model.eval_loss(node_type,
                                inputs=x,
                                inputs_st=x_st_t,
                                inputs_lane=lane_input,
@@ -148,7 +148,7 @@ class Trajectron(object):
                                map=map,
                                prediction_horizon=self.ph)
 
-        return loss.cpu().detach().numpy()
+        return loss.cpu().detach().numpy(), reg_loss.cpu().detach().numpy()
 
     def predict(self,
                 scene,
@@ -180,9 +180,8 @@ class Trajectron(object):
             _,
             robot_traj_st_t,
             lanes, map), nodes, timesteps_o = batch
-            # print('lanes : ',lanes[2])
-
-            if self.hyperparams['lane_loss']:
+            
+            if self.hyperparams['lane_cnn_encoding']:
                 lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
                 # [batch_size, lane_num, 1] one-hot encoding
                 lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
@@ -208,7 +207,7 @@ class Trajectron(object):
                                                     map=map,
                                                     prediction_horizon=ph)
 
-            if self.hyperparams['lane_loss']: 
+            if self.hyperparams['lane_cnn_encoding']: 
                 max_lane_num = lane_pred.size()[1]
                 # [bs, lane_num, timestep, feature_dim] -> [1, bs, lane_num, timestep, feature_dim]
                 lane_pred = lane_pred.unsqueeze(0).cpu().detach().numpy()

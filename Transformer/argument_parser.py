@@ -26,7 +26,15 @@ parser.add_argument('--incl_robot_node',
                     help="whether to include a robot node in the graph or simply model all agents",
                     action='store_true')
 
-parser.add_argument('--map_encoding',
+parser.add_argument('--map_cnn_encoding',
+                    help="Whether to use map encoding or not",
+                    action='store_true')
+
+parser.add_argument('--map_vit_encoding',
+                    help="Whether to use map encoding or not",
+                    action='store_true')
+
+parser.add_argument('--lane_cnn_encoding',
                     help="Whether to use map encoding or not",
                     action='store_true')
 
