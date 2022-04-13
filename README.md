@@ -71,7 +71,7 @@ To preprocess the nuScenes data, you can execute the command below in `nuScene` 
     ├── Transformer
 
 To train a model with nuScene data, you can execute the command below in `Transformer` directory, depending on the model version you desire.<br></br>
-*Note that the device parameter depends on your machine if machine don't have gpu use "cpu".*
+**Note that the device parameter depends on your machine if machine don't have gpu use "cpu".**
 | Model| Command|
 |:---|:---|
 | Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag basic_transformer --augment --autoregressive --device "cuda:1" ```|
