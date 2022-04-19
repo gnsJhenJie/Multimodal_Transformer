@@ -111,7 +111,7 @@ class GeometricMap(Map):
         context_padding_x = int(np.ceil(np.sqrt(2) * lat_size))
         context_padding_y = int(np.ceil(np.sqrt(2) * long_size))
 
-        centers = torch.tensor([s_map.to_map_points(scene_pts[np.newaxis, i]) for i, s_map in enumerate(maps)],
+        centers = torch.tensor(np.array([s_map.to_map_points(scene_pts[np.newaxis, i]) for i, s_map in enumerate(maps)]),
                                dtype=torch.long, device=device).squeeze(dim=1) + torch.tensor([context_padding_x, context_padding_y], device=device, dtype=torch.long)
 
         padded_map = [s_map.get_padded_map(context_padding_x, context_padding_y, device=device) for s_map in maps]
