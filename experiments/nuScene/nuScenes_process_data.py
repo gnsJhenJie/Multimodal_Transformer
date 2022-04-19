@@ -120,6 +120,7 @@ def augment_scene(scene, angle, lane_process):
             heading = (heading + np.pi) % (2.0 * np.pi) - np.pi
 
             x, y = rotate_pc(np.array([x, y]), alpha)
+            # print("augment x shape : ",x.shape)
             vx = derivative_of(x, scene.dt)
             vy = derivative_of(y, scene.dt)
             ax = derivative_of(vx, scene.dt)
@@ -149,6 +150,7 @@ def augment_scene(scene, angle, lane_process):
             lane_id = None
             if lane_process:
                 lanes = node.lanes_point
+                length_t = len(lanes) 
                 lane_id = node.lanes_id
                 #(t, 3, 16, 2)
                 for t_lanes in lanes:
@@ -156,13 +158,19 @@ def augment_scene(scene, angle, lane_process):
                     rotate_lanes_point = [np.transpose(rotate_pc(np.transpose(t_lane), alpha)) for t_lane in t_lanes]
                     total_rot_lanes.append(rotate_lanes_point)
 
-            node = Node(node_type=node.type, node_id=node.id, data=node_data, first_timestep=node.first_timestep,
-                        non_aug_node=node)
+            aug_node = Node(node_type=node.type, node_id=node.id, data=node_data, first_timestep=node.first_timestep,
+                            non_aug_node=node)
 
             if lane_process:
-                node.get_lane_id(total_rot_lanes, lane_id)
+                if len(total_rot_lanes) != x.shape[0]:
+                    print("augment error length lanes not equal to x coordinate !")
+                    print((length_t, len(total_rot_lanes), x.shape[0]))
+                    print(x)
+                # print("Node first_timestep : ",node.first_timestep)
+                # print("aug_node first_timestep : ",aug_node.first_timestep)
+                aug_node.get_lane_id(total_rot_lanes, lane_id)
 
-        scene_aug.nodes.append(node)
+        scene_aug.nodes.append(aug_node)
     return scene_aug
 
 
@@ -312,7 +320,9 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         if not np.all(np.diff(node_df['frame_id']) == 1):
             # print('Occlusion')
             continue  # TODO Make better
+
         
+
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
         y = node_values[:, 1]    
@@ -377,10 +387,9 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         ax = derivative_of(vx, scene.dt)
         ay = derivative_of(vy, scene.dt)
 
-        # #########################
-        # # Get Interest Lanes ID #
-        # #########################
-
+        #########################
+        # Get Interest Lanes ID #
+        #########################
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
             v = np.stack((vx, vy), axis=-1)
             v_norm = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1, keepdims=True)
@@ -414,10 +423,15 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         node.first_timestep = node_df['frame_id'].iloc[0]
 
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process :
-            agent_points = node_values[:, :2]
+            # print("concat agent_points",np.column_stack((x, y)))
+            agent_points = np.column_stack((x, y))
+            # print("agent_points",agent_points)
             valid_lane, total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
             if not valid_lane:
                 continue
+            if len(total_lanes_point) != x.shape[0]:
+                print("error length lanes not equal to x coordinate !")
+                print((len(total_lanes_point),node_df['x'].shape[0]))
             node.get_lane_id(total_lanes_point, total_lanes_id)
 
         if node_df.iloc[0]['robot'] == True:
