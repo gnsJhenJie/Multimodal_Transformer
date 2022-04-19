@@ -51,7 +51,6 @@ class NodeTypeDataset(data.Dataset):
         self.edge_types = [edge_type for edge_type in env.get_edge_types() if edge_type[0] is node_type]
 
     def index_env(self, node_freq_mult, scene_freq_mult, **kwargs):
-
         index = list()
         for scene in self.env.scenes:
             present_node_dict = scene.present_nodes(np.arange(0, scene.timesteps), type=self.node_type, **kwargs)
@@ -70,7 +69,6 @@ class NodeTypeDataset(data.Dataset):
         (scene, t, node) = self.index[i]
 
         if self.augment:
-            # lane augment ?
             scene = scene.augment()
             node = scene.get_node_by_id(node.id)
 

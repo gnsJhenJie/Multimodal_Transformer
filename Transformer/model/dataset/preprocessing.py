@@ -160,24 +160,28 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
     # Lane
     elif hyperparams['lane_cnn_encoding']:
         # TODO get Lane_label and lane need to be normalize
-        print(node)
-        def get_gt_lane(point, lane_t_points):
+        # print(node)
+        def get_gt_lane(lane_mask, point, lanes_t_points):
             min_dis = []
             distance = 1e10
-            for lanes_points in lane_t_points:
-                distance = np.abs(np.cross(p2-p1, point-p1)) / \
-                    np.abs(lane_vector)
+            for i,lanes_points in enumerate(lanes_t_points):
+                if not lane_mask[i]:
+                    distance = 1e10
+                    min_dis.append(distance)
+                    continue
+                distance = np.abs(np.cross(lanes_points[1]-lanes_points[0], point-lanes_points[0])) / \
+                    np.abs(np.linalg.norm(lanes_points[1]-lanes_points[0]))
                 min_dis.append(distance)
-
             return np.argmin(min_dis)
-        index = node.history_points_at(t) - 1
+
         total_lanes_points = node.lanes_point
-        lanes_t_points = np.array(total_lanes_points[index])
-        lane_mask = torch.tensor(np.linalg.norm(lanes_t_points[:, 0] - lanes_t_points[:, 1],axis=1) ,dtype=torch.bool)
+        index = node.history_points_at(t)   
+        lanes_t_points = np.array(total_lanes_points[index]) / 80
+        lane_mask = torch.tensor(np.linalg.norm(lanes_t_points[:, 0] - lanes_t_points[:, 1], axis=1) ,dtype=torch.bool)
         y_lane = []
-        for i, point in enumerate(y):
+        for point in y_st:
             temp = np.array([0,0,0])
-            temp[get_gt_lane(point, lanes_t_points)] = 1
+            temp[get_gt_lane(lane_mask, point, lanes_t_points)] = 1
             y_lane.append(temp)
         y_lane = torch.tensor(y_lane, dtype=torch.float)
         lane_tuple = (lanes_t_points, y_lane, lane_mask)

@@ -9,6 +9,7 @@ class Lane_Encoder(nn.Module):
     def __init__(self, layers, embedding_size, output_channels, output_size, kernel_size, strides):
         super(Lane_Encoder, self).__init__()
         # Using dummy input to initialize the neural networks parameter
+        
         x_dummy = torch.zeros((1, 2, 10))
         self.convs = nn.ModuleList()
         self.convs.append(
@@ -19,7 +20,7 @@ class Lane_Encoder(nn.Module):
         self.fc = nn.Linear(x_dummy.size()[-1], output_size)
 
     def forward(self, x):
-        for conv in self.convs:
+        for conv in self.convs :
             x = F.leaky_relu(conv(x), 0.2)
 
         return self.fc(torch.flatten(x, start_dim=1))

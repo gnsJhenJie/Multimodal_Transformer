@@ -71,6 +71,7 @@ def main():
         print('| CNN encoding lane mode  %s' % hyperparams['lane_cnn_encoding'])
     else:
         print('| Basic mode (No Map Information Encoding)  True')
+    print('| Data augment mode  %s' % hyperparams['augment'])
     print('| MHL: %s' % hyperparams['minimum_history_length'])
     print('| PH: %s' % hyperparams['prediction_horizon'])
     print('-----------------------')

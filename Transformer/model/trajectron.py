@@ -63,16 +63,12 @@ class Trajectron(object):
          _,
          robot_traj_st_t,
          lanes, map) = batch
-        # Turn lane data into tensor
-        # [batch_size, lane_num, length, feature_dim]
+
         if self.hyperparams['lane_cnn_encoding']:
-            lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
-            # [batch_size, lane_num, 1] one-hot encoding
-            lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
-            lane_label = torch.stack(lanes[2]).to(self.device)
-            lane_t_mask = torch.stack(lanes[3]).to(self.device)
+            lane_input = torch.tensor(np.array(lanes[0]), device=self.device, dtype=torch.float32)
+            lane_label = torch.stack(lanes[1]).to(self.device)
+            lane_t_mask = torch.stack(lanes[2]).to(self.device)
         else:
-            lane_mask = None
             lane_input = None
             lane_label = None
             lane_t_mask = None
@@ -94,13 +90,11 @@ class Trajectron(object):
                                 inputs_st=x_st_t,
                                 inputs_lane=lane_input,
                                 lane_label=lane_label,
-                                lane_mask=lane_mask,
                                 lane_t_mask=lane_t_mask,
                                 labels=y,
                                 labels_st=y_st_t,
                                 map=map,
                                 prediction_horizon=self.ph)
-
         return loss, reg_loss
 
     def eval_loss(self, batch, node_type):
@@ -113,13 +107,10 @@ class Trajectron(object):
          lanes, map) = batch
 
         if self.hyperparams['lane_cnn_encoding']:
-            lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
-            # [batch_size, lane_num, 1] one-hot encoding
-            lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
-            lane_label = torch.stack(lanes[2]).to(self.device)
-            lane_t_mask = torch.stack(lanes[3]).to(self.device)
+            lane_input = torch.tensor(np.array(lanes[0]), device=self.device, dtype=torch.float32)
+            lane_label = torch.stack(lanes[1]).to(self.device)
+            lane_t_mask = torch.stack(lanes[2]).to(self.device)
         else:
-            lane_mask = None
             lane_input = None
             lane_label = None
             lane_t_mask = None
@@ -141,7 +132,6 @@ class Trajectron(object):
                                inputs_st=x_st_t,
                                inputs_lane=lane_input,
                                lane_label=lane_label,
-                               lane_mask=lane_mask,
                                lane_t_mask=lane_t_mask,
                                labels=y,
                                labels_st=y_st_t,
@@ -182,12 +172,9 @@ class Trajectron(object):
             lanes, map), nodes, timesteps_o = batch
             
             if self.hyperparams['lane_cnn_encoding']:
-                lane_mask = torch.tensor(lanes[0], dtype=torch.bool, device=self.device)
-                # [batch_size, lane_num, 1] one-hot encoding
-                lane_input = torch.tensor(np.array(lanes[1]), device=self.device, dtype=torch.float64)
-                lane_t_mask = torch.stack(lanes[3]).to(self.device)
+                lane_input = torch.tensor(np.array(lanes[0]), device=self.device, dtype=torch.float32)
+                lane_t_mask = torch.stack(lanes[2]).to(self.device)
             else:
-                lane_mask = None
                 lane_input = None
                 lane_t_mask = None
 
@@ -202,7 +189,6 @@ class Trajectron(object):
             history_pred, lane_pred = model.predict(inputs=x,
                                                     inputs_st=x_st_t,
                                                     inputs_lane=lane_input,
-                                                    lane_mask=lane_mask,
                                                     lane_t_mask=lane_t_mask,
                                                     map=map,
                                                     prediction_horizon=ph)
