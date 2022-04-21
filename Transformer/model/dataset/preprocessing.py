@@ -35,7 +35,7 @@ def collate(batch):
                 heading_angle = torch.tensor(heading_angle)
             map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
                                                                      scene_pts=torch.tensor(
-                                                                         scene_pts),
+                                                                         np.array(scene_pts)),
                                                                      patch_size=patch_size[0],
                                                                      rotation=heading_angle)
             return map
