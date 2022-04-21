@@ -126,7 +126,7 @@ class GeometricMap(Map):
                                       device=device).repeat(batch_size, 1)
         
         if rotation is not None:
-            angles = torch.tensor(rotation)
+            angles = rotation.clone().detach()
         else:
             angles = torch.zeros(batch_size)
 
