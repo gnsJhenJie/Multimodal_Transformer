@@ -321,8 +321,6 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
             # print('Occlusion')
             continue  # TODO Make better
 
-        
-
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
         y = node_values[:, 1]    

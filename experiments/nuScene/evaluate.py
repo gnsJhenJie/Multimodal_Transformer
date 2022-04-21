@@ -116,43 +116,40 @@ if __name__ == "__main__":
                                                                                             ph,
                                                                                             prune_ph_to_future=False)
 
+                    # check for multiple output offroad rate
+                    # for t in history_prediction_dict.keys():
+                    #     for node in history_prediction_dict[t].keys():
+                    #         if node.type == args.node_type:
+                    #             viols = compute_road_violations(history_prediction_dict[t][node],
+                    #                                             scene.map[args.node_type],
+                    #                                             channel=0)
+
+                    #         # for lane in lane_prediction_dict[t][node].keys():
+                    #         #     lane_viols = compute_road_violations(lane_prediction_dict[t][node][lane],
+                    #         #                                 scene.map[args.node_type],
+                    #         #                                 channel=0)
+                    #         # print('viols : ', viols)
+
+                    #         eval_road_viols_batch.append(viols)
+                    # eval_road_viols = np.hstack(
+                    #     (eval_road_viols, eval_road_viols_batch))
+                    if hyperparams['lane_cnn_encoding']:
+                        batch_error_dict = evaluation.lane_compute_batch_statistics(lane_pred,
+                                                                            scene.dt,
+                                                                            max_hl=max_hl,
+                                                                            ph=ph,
+                                                                            node_type_enum=env.NodeType,
+                                                                            map=None,
+                                                                            prune_ph_to_future=False)
+                    else:
+                        batch_error_dict = evaluation.compute_batch_statistics(history_pred,
+                                                                            scene.dt,
+                                                                            max_hl=max_hl,
+                                                                            ph=ph,
+                                                                            node_type_enum=env.NodeType,
+                                                                            map=None,
+                                                                            prune_ph_to_future=False)
                     
-                    for t in history_prediction_dict.keys():
-                        for node in history_prediction_dict[t].keys():
-                            if node.type == args.node_type:
-                                viols = compute_road_violations(history_prediction_dict[t][node],
-                                                                scene.map[args.node_type],
-                                                                channel=0)
-
-                            # for lane in lane_prediction_dict[t][node].keys():
-                            #     lane_viols = compute_road_violations(lane_prediction_dict[t][node][lane],
-                            #                                 scene.map[args.node_type],
-                            #                                 channel=0)
-                            # print('viols : ', viols)
-
-                            eval_road_viols_batch.append(viols)
-                        
-
-                    eval_road_viols = np.hstack(
-                        (eval_road_viols, eval_road_viols_batch))
-
-                    batch_error_dict = evaluation.compute_batch_statistics(history_pred,
-                                                                        scene.dt,
-                                                                        max_hl=max_hl,
-                                                                        ph=ph,
-                                                                        node_type_enum=env.NodeType,
-                                                                        map=None,
-                                                                        prune_ph_to_future=False)
-                
-                    # lane_batch_error_dict = evaluation.lane_compute_batch_statistics(lane_pred,
-                    #                                                        scene.dt,
-                    #                                                        max_hl=max_hl,
-                    #                                                        ph=ph,
-                    #                                                        node_type_enum=env.NodeType,
-                    #                                                        map=None,
-                    #                                                        prune_ph_to_future=False)
-                    
-                    print('ADE : ',batch_error_dict[args.node_type]['ade'])
                     eval_ade_batch_errors = np.hstack(
                         (eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
                     eval_fde_batch_errors = np.hstack(

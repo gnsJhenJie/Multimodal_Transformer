@@ -31,6 +31,7 @@ class MultimodalGenerativeCVAE(object):
             edge_type for edge_type in edge_types if edge_type[0] is node_type]
         self.curr_iter = 0
 
+        self.class_input = []
         self.node_modules = dict()
 
         self.min_hl = self.hyperparams['minimum_history_length']
@@ -92,7 +93,7 @@ class MultimodalGenerativeCVAE(object):
                                                             me_params['kernel_size'],
                                                             me_params['strides']))
 
-            fusion_layer_size = self.hyperparams['transformer']['in_dim']*9 + me_params['output_size']
+            fusion_layer_size = self.hyperparams['transformer']['in_dim'] + me_params['output_size']
 
             self.add_submodule(self.node_type + '/fusion/lane_hist',
                             model_if_absent=Mlp(in_channels=fusion_layer_size,
@@ -103,7 +104,7 @@ class MultimodalGenerativeCVAE(object):
             #  MLP + softmax  #
             ###################
             self.add_submodule(self.node_type + '/Lane/MLP_Softmax',
-                                model_if_absent=Mlp(in_channels=me_params['output_size'],
+                                model_if_absent=Mlp(in_channels=me_params['output_size']*3,
                                                     output_size=self.hyperparams['max_lane_num'],
                                                     layer_num=self.hyperparams['mlp_layer'],
                                                     mode='classification'))
@@ -320,7 +321,7 @@ class MultimodalGenerativeCVAE(object):
         batch_size = init_pos.size()[0]
         pred_state = init_pos.size()[1]
 
-        lane_pred = None
+        lane_pred = []
         history_pred = None
 
         if self.hyperparams['lane_cnn_encoding']: # inference model by lane feature and history feature
@@ -328,22 +329,25 @@ class MultimodalGenerativeCVAE(object):
             lane_decoder = self.node_modules[self.node_type + "/decoder/transformer_decoder"]
             fusion = self.node_modules[self.node_type + "/fusion/lane_hist"]
             mlp = self.node_modules[self.node_type + "/decoder/MLP"]
-            lane_input = init_pos.view(batch_size, 1, pred_state)
-            memory = memory.view(batch_size, 1, mem_size[-1]*mem_size[-2]).repeat(1, max_lane_num, 1)
-            lane_hist = fusion(torch.cat([memory, lane_feature],dim=-1))
-            for i in range(prediction_horizon):
-                tgt_mask = generate_square_subsequent_mask(lane_input.size()[-2], self.device)
-                h_state = lane_decoder(tgt=lane_input,
-                                        memory=lane_hist,
-                                        tgt_mask=tgt_mask,
-                                        memory_mask=None,
-                                        memory_key_padding_mask=None)
-                if i == prediction_horizon - 1:
-                    self.class_input = h_state
-                delta_pos = mlp(h_state[:, -1, :])
-                new_state = lane_input[:, -1, :] + delta_pos
-                lane_input = torch.cat([lane_input, new_state.view(batch_size, 1, pred_state)], dim=-2)
-            lane_pred = lane_input[:, 1:, :]
+
+            for i in range(max_lane_num):
+                lane_input = init_pos.view(batch_size, 1, pred_state)
+                lane_feature = lane_feature[:, [i], :].repeat(1, history_timestep, 1)
+                lane_memory = torch.cat([memory, lane_feature], dim = -1)
+                lane_hist = fusion(lane_memory)
+                for i in range(prediction_horizon):
+                    tgt_mask = generate_square_subsequent_mask(lane_input.size()[-2], self.device)
+                    h_state = lane_decoder(tgt=lane_input,
+                                            memory=lane_hist,
+                                            tgt_mask=tgt_mask,
+                                            memory_mask=memory_mask,
+                                            memory_key_padding_mask=memory_key_padding_mask)
+                    if i == prediction_horizon - 1:
+                        self.class_input.append(h_state)
+                    delta_pos = mlp(h_state[:, -1, :])
+                    new_state = lane_input[:, -1, :] + delta_pos
+                    lane_input = torch.cat([lane_input, new_state.view(batch_size, 1, pred_state)], dim=-2)
+                lane_pred.append(lane_input[:, 1:, :])
         else: # inference model by only history feature
             transformer_decoder = self.node_modules[self.node_type + "/decoder/transformer_decoder"]
             mlp = self.node_modules[self.node_type + '/decoder/MLP']
@@ -411,7 +415,9 @@ class MultimodalGenerativeCVAE(object):
                                                       prediction_horizon)
 
         if self.hyperparams['lane_cnn_encoding']:
-                pred_lane_index = self.classification_lane(self.class_input)
+            lane_inp = torch.cat(self.class_input, dim = -1)
+            pred_lane_index = self.classification_lane(lane_inp)
+            self.class_input = []
 
         return history_pred, lane_pred, pred_lane_index
 
@@ -505,11 +511,14 @@ class MultimodalGenerativeCVAE(object):
         con_loss = 0
         viol_rate = 0
         if self.hyperparams['lane_cnn_encoding']:
-            lane_reg_loss = L2_norm(lane_pred, labels_st)
-            lane_reg_loss = torch.sum(lane_reg_loss, dim=-1) / prediction_horizon  # [nbs]
-            lane_mask = torch.ones(lane_reg_loss.size(), device=self.device)
-            cls_loss = classification_loss(lane_label, lane_attn)
-            reg_loss = lane_reg_loss
+            lane_pred = torch.stack(lane_pred, dim = 1)
+            lane_reg_loss = L2_norm(lane_pred, torch.unsqueeze(labels_st, 1)) # [bs, lane_num, timestep]
+            lane_reg_loss = torch.sum(lane_reg_loss, dim=-1) / prediction_horizon # [bs, lane_num]
+            lane_min_loss = torch.min(lane_reg_loss, dim = -1)[0]
+            lane_mask = torch.ones(lane_min_loss.size(), device=self.device)
+            # cls_loss = classification_loss(lane_label, lane_attn)
+            # cls_loss = cls_loss / torch.sum(lane_mask)
+            reg_loss = lane_min_loss
         else:
             history_reg_loss = L2_norm(history_pred, labels_st)
             history_reg_loss = torch.sum(history_reg_loss, dim=-1) / prediction_horizon  # [nbs]
@@ -517,7 +526,6 @@ class MultimodalGenerativeCVAE(object):
             reg_loss = history_reg_loss
     
         reg_loss = torch.sum(reg_loss) / torch.sum(lane_mask)
-        cls_loss = cls_loss / torch.sum(lane_mask)
         loss = reg_loss + cls_loss + con_loss
 
         if self.log_writer is not None:
@@ -629,13 +637,14 @@ class MultimodalGenerativeCVAE(object):
                                                                                                                                  inputs_st=inputs_st,
                                                                                                                                  inputs_lane=inputs_lane,
                                                                                                                                  map=map)
-        history_pred, lane_pred, _ = self.test_decoder(memory,
-                                                        memory_mask,
-                                                        memory_key_padding_mask,
-                                                        n_s_t0,
-                                                        encoded_lane,
-                                                        encoded_map,
-                                                        prediction_horizon)
+        history_pred, lane_pred, lane_attn = self.test_decoder(True,
+                                                               memory,
+                                                               memory_mask,
+                                                               memory_key_padding_mask,
+                                                               n_s_t0,
+                                                               encoded_lane,
+                                                               encoded_map,
+                                                               prediction_horizon)
         if self.hyperparams['lane_cnn_encoding']:
             max_lane_num = lane_pred.size()[1]
             lane_pred = lane_pred*80 + node_pos.view(bs, 1, 1, feature_dim).repeat(1, max_lane_num, 1, 1)
