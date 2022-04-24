@@ -216,10 +216,10 @@ def get_timesteps_data(env, scene, t, node_type, state, pred_state,
     nodes = list()
     out_timesteps = list()
     for timestep in nodes_per_ts.keys():
-        scene_graph = scene.get_scene_graph(timestep,
-                                            env.attention_radius,
-                                            hyperparams['edge_addition_filter'],
-                                            hyperparams['edge_removal_filter'])
+        scene_graph = None #scene.get_scene_graph(timestep,
+                           #                      env.attention_radius,
+                           #                      hyperparams['edge_addition_filter'],
+                           #                      hyperparams['edge_removal_filter'])
         present_nodes = nodes_per_ts[timestep]
         for node in present_nodes:
             nodes.append(node)
