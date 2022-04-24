@@ -7,7 +7,6 @@ def prediction_output_to_trajectories(prediction_output_dict,
                                       ph,
                                       map=None,
                                       prune_ph_to_future=False):
-
     prediction_timesteps = prediction_output_dict.keys()
 
     output_dict = dict()
