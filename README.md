@@ -79,7 +79,7 @@ To train a model with nuScene data, you can execute the command below in `Transf
 | Map_encoding_ViT |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag ViT_transformer --augment --autoregressive --map_vit_encoding --device "cuda:1" ```|
 | Lane_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag Lane_transformer --augment --autoregressive --lane_cnn_encoding --device "cuda:1" ``` (uncheck)|
 
-# Evaluate Progress (uncheck)
+# Evaluate Progress 
     
     ${Trajectron root}
     ├── experiments
@@ -93,7 +93,7 @@ To evaluate a trained model's performance on forecasting vehicles, you can execu
 | Basic |```python evaluate.py --model models/basic_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag basic_transformer --node_type VEHICLE --prediction_horizon 8```|
 | Map_encoding_CNN |```python evaluate.py --model models/CNN_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag CNN_transformer --node_type VEHICLE --prediction_horizon 8```|
 | Map_encoding_ViT |```python evaluate.py --model models/ViT_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag ViT_transformer --node_type VEHICLE --prediction_horizon 8```|
-| Lane_encoding_CNN |```python evaluate.py --model models/Lane_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag Lane_transformer --node_type VEHICLE --prediction_horizon 8```|
+| Lane_encoding_CNN |```python evaluate.py --model models/Lane_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag Lane_transformer --node_type VEHICLE --prediction_horizon 8```(uncheck)|
 
 # TODO
 - [ ] Rename Folders and command.

@@ -94,6 +94,9 @@
       ]
     }
   },
+
+  "edge_addition_filter": [0.25, 0.5, 0.75, 1.0], 
+  "edge_removal_filter": [1.0, 0.0],
   "node_freq_mult_train": true,
   "node_freq_mult_eval": false,
   "scene_freq_mult_train": false,

@@ -145,10 +145,7 @@ def L2_norm(y_pred, labels):
     :param: labels  [bs,timestep,2]
     :return the distance error of each lane_output [bs, lane_num]
     """
-    torch.set_printoptions(precision=4, sci_mode=False)
-    value = torch.norm(y_pred-labels, p=2, dim=-1)  # [bs, lane_num, timestep]
-
-    return value
+    return torch.norm(y_pred-labels, p=2, dim=-1)
 
 def obs_violation_rate(predicted_trajs, groundtruth_trajs, map, heading_angle, channel, device):
     
