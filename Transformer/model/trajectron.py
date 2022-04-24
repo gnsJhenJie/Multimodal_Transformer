@@ -147,7 +147,7 @@ class Trajectron(object):
                 min_future_timesteps=0,
                 min_history_timesteps=1):
 
-        history_pred_dict = {}
+        history_pred_dict = dict()
         lane_pred_dict = {}
         for node_type in self.env.NodeType:
             if node_type not in self.pred_state:
@@ -184,7 +184,6 @@ class Trajectron(object):
                 robot_traj_st_t = robot_traj_st_t.to(self.device)
             if type(map) == torch.tensor:
                 map = map.to(self.device)
-
             # Run forward pass
             history_pred, lane_pred = model.predict(inputs=x,
                                                     inputs_st=x_st_t,

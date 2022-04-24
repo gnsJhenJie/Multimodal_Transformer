@@ -467,7 +467,9 @@ class MultimodalGenerativeCVAE(object):
                                                       prediction_horizon)
 
         if self.hyperparams['lane_cnn_encoding']:
-                pred_lane_index = self.classification_lane(self.class_input)
+            lane_inp = torch.cat(self.class_input, dim = -1)
+            pred_lane_index = self.classification_lane(lane_inp)
+            self.class_input = []
 
         return history_pred, lane_pred, pred_lane_index
 
@@ -585,19 +587,21 @@ class MultimodalGenerativeCVAE(object):
         viol_rate = 0
         # using hyperparam to choose loss mode
         if self.hyperparams['lane_cnn_encoding']:
-            lane_reg_loss = L2_norm(lane_pred, labels_st)
-            lane_reg_loss = torch.sum(lane_reg_loss, dim=-1) / prediction_horizon  # [nbs]
-            lane_mask = torch.ones(lane_reg_loss.size(), device=self.device)
-            cls_loss = classification_loss(lane_label, lane_attn)
-            reg_loss = lane_reg_loss
+            lane_pred = torch.stack(lane_pred, dim = 1)
+            lane_reg_loss = L2_norm(lane_pred, torch.unsqueeze(labels_st, 1)) # [bs, lane_num, timestep]
+            lane_reg_loss = torch.sum(lane_reg_loss, dim=-1) / prediction_horizon # [bs, lane_num]
+            lane_min_loss = torch.min(lane_reg_loss, dim = -1)[0]
+            lane_mask = torch.ones(lane_min_loss.size(), device=self.device)
+            # cls_loss = classification_loss(lane_label, lane_attn)
+            # cls_loss = cls_loss / torch.sum(lane_mask)
+            reg_loss = lane_min_loss
         else:
-            history_reg_loss = L2_norm(history_pred, labels_st)
+            history_reg_loss = L2_norm(history_pred, labels)
             history_reg_loss = torch.sum(history_reg_loss, dim=-1) / prediction_horizon  # [nbs]
             lane_mask = torch.ones(history_reg_loss.size(), device=self.device)
             reg_loss = history_reg_loss
     
         reg_loss = torch.sum(reg_loss) / torch.sum(lane_mask)
-        cls_loss = cls_loss / torch.sum(lane_mask)
         loss = reg_loss + cls_loss + con_loss
 
         return loss, reg_loss
@@ -650,5 +654,4 @@ class MultimodalGenerativeCVAE(object):
             lane_pred = lane_pred*80 + node_pos.view(bs, 1, 1, feature_dim).repeat(1, max_lane_num, 1, 1)
         else:
             history_pred = history_pred*80 + node_pos
-
         return history_pred, lane_pred
