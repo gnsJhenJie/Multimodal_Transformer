@@ -35,7 +35,7 @@ def collate(batch):
                 heading_angle = torch.tensor(heading_angle)
             map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
                                                                      scene_pts=torch.tensor(
-                                                                         scene_pts),
+                                                                         np.array(scene_pts)),
                                                                      patch_size=patch_size[0],
                                                                      rotation=heading_angle)
             return map
@@ -216,10 +216,10 @@ def get_timesteps_data(env, scene, t, node_type, state, pred_state,
     nodes = list()
     out_timesteps = list()
     for timestep in nodes_per_ts.keys():
-        scene_graph = scene.get_scene_graph(timestep,
-                                            env.attention_radius,
-                                            hyperparams['edge_addition_filter'],
-                                            hyperparams['edge_removal_filter'])
+        scene_graph = None #scene.get_scene_graph(timestep,
+                           #                      env.attention_radius,
+                           #                      hyperparams['edge_addition_filter'],
+                           #                      hyperparams['edge_removal_filter'])
         present_nodes = nodes_per_ts[timestep]
         for node in present_nodes:
             nodes.append(node)

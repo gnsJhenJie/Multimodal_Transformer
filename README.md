@@ -7,8 +7,8 @@ The Directory of our project.
     ├── data
     ├── experiments
     ├── Transformer
-    ├── README.md000
-00    └── requirements.txt
+    ├── README.md
+    └── requirements.txt
 
 # Data preparation
 
