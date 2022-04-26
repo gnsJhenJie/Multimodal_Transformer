@@ -1,5 +1,6 @@
 experiments/nuScene/models/*
-py3.6_env/
+experiments/nuScene/evaluate.py
+experiments/nuScene/results/result_calc.py
 experiments/nuScene/pandaset-devkit/
 data/*/
 .vscode/
