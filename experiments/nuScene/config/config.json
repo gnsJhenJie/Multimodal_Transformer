@@ -6,8 +6,8 @@
   "min_learning_rate": 1e-05,
   "learning_decay_rate": 0.9999,
   "prediction_horizon": 8,
-  "minimum_history_length": 8,
-  "maximum_history_length": 8,
+  "minimum_history_length": 4,
+  "maximum_history_length": 4,
   "map_encoder": {
     "transformer" : true,
     "vit_param":{
