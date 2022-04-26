@@ -512,6 +512,7 @@ class MultimodalGenerativeCVAE(object):
         cls_loss = 0
         con_loss = 0
         viol_rate = 0
+
         if self.hyperparams['lane_cnn_encoding']:
             lane_pred = torch.stack(lane_pred, dim = 1)
             lane_reg_loss = L2_norm(lane_pred, torch.unsqueeze(labels_st, 1)) # [bs, lane_num, timestep]
@@ -581,6 +582,9 @@ class MultimodalGenerativeCVAE(object):
                                                                encoded_map,
                                                                prediction_horizon)
         
+        node_pos = inputs[:, [-1], 0:2]  # get init state
+        bs, _, feature_dim = node_pos.size()
+        
         reg_loss = 0
         cls_loss = 0
         con_loss = 0
@@ -588,14 +592,16 @@ class MultimodalGenerativeCVAE(object):
         # using hyperparam to choose loss mode
         if self.hyperparams['lane_cnn_encoding']:
             lane_pred = torch.stack(lane_pred, dim = 1)
-            lane_reg_loss = L2_norm(lane_pred, torch.unsqueeze(labels_st, 1)) # [bs, lane_num, timestep]
-            lane_reg_loss = torch.sum(lane_reg_loss, dim=-1) / prediction_horizon # [bs, lane_num]
+            lane_pred = lane_pred*80 + node_pos.view(bs, 1, 1, feature_dim).repeat(1, max_lane_num, 1, 1)
+            lane_reg_loss = L2_norm(lane_pred, torch.unsqueeze(labels, 1)) # [bs, lane_num, timestep]
+            lane_reg_loss = torch.sum(lane_reg_loss, dim = -1) / prediction_horizon # [bs, lane_num]
             lane_min_loss = torch.min(lane_reg_loss, dim = -1)[0]
             lane_mask = torch.ones(lane_min_loss.size(), device=self.device)
             # cls_loss = classification_loss(lane_label, lane_attn)
             # cls_loss = cls_loss / torch.sum(lane_mask)
             reg_loss = lane_min_loss
         else:
+            history_pred = history_pred*80 + node_pos
             history_reg_loss = L2_norm(history_pred, labels)
             history_reg_loss = torch.sum(history_reg_loss, dim=-1) / prediction_horizon  # [nbs]
             lane_mask = torch.ones(history_reg_loss.size(), device=self.device)
@@ -651,6 +657,7 @@ class MultimodalGenerativeCVAE(object):
                                                                prediction_horizon)
         if self.hyperparams['lane_cnn_encoding']:
             max_lane_num = lane_pred.size()[1]
+            lane_pred = torch.stack(lane_pred, dim = 1)
             lane_pred = lane_pred*80 + node_pos.view(bs, 1, 1, feature_dim).repeat(1, max_lane_num, 1, 1)
         else:
             history_pred = history_pred*80 + node_pos
