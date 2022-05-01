@@ -165,9 +165,6 @@ def augment_scene(scene, angle, lane_process):
                 if len(total_rot_lanes) != x.shape[0]:
                     print("augment error length lanes not equal to x coordinate !")
                     print((length_t, len(total_rot_lanes), x.shape[0]))
-                    print(x)
-                # print("Node first_timestep : ",node.first_timestep)
-                # print("aug_node first_timestep : ",aug_node.first_timestep)
                 aug_node.get_lane_id(total_rot_lanes, lane_id)
 
         scene_aug.nodes.append(aug_node)
@@ -268,10 +265,11 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
     y_min = np.round(data['y'].min() - 50)
     y_max = np.round(data['y'].max() + 50)
 
+    lane_data = data.copy()
     # data been standarized
-    if not lane_process:
-        data['x'] = data['x'] - x_min
-        data['y'] = data['y'] - y_min
+    data['x'] = data['x'] - x_min
+    data['y'] = data['y'] - y_min
+    
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id), aug_func=augment)
 
@@ -325,6 +323,11 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         x = node_values[:, 0]
         y = node_values[:, 1]    
 
+        lane_df = lane_data[lane_data['node_id'] == node_id]
+        x_y_cor = lane_df[['x', 'y']].values
+        lane_x = x_y_cor[:, 0]
+        lane_y = x_y_cor[:, 1]
+
         heading = node_df['heading'].values
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and not node_id == 'ego':
             # Kalman filter Agent
@@ -367,6 +370,8 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
             if pl < 1.0:  # vehicle is "not" moving
                 x = x[0].repeat(max_timesteps + 1)
                 y = y[0].repeat(max_timesteps + 1)
+                lane_x = lane_x[0].repeat(max_timesteps + 1)
+                lane_y = lane_y[0].repeat(max_timesteps + 1)
                 heading = heading[0].repeat(max_timesteps + 1)
             global total
             global curv_0_2
@@ -421,15 +426,14 @@ def process_scene(ns_scene, env, nusc, data_path, lane_process):
         node.first_timestep = node_df['frame_id'].iloc[0]
 
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and lane_process :
-            # print("concat agent_points",np.column_stack((x, y)))
-            agent_points = np.column_stack((x, y))
+            agent_points = np.column_stack((lane_x, lane_y))
             # print("agent_points",agent_points)
             valid_lane, total_lanes_point, total_lanes_id = get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius=5, angle_threshold=30, stop_threshold=0.5, resolution_meters=0.5)
             if not valid_lane:
                 continue
             if len(total_lanes_point) != x.shape[0]:
                 print("error length lanes not equal to x coordinate !")
-                print((len(total_lanes_point),node_df['x'].shape[0]))
+                print((len(total_lanes_point),lane_df['x'].shape[0]))
             node.get_lane_id(total_lanes_point, total_lanes_id)
 
         if node_df.iloc[0]['robot'] == True:

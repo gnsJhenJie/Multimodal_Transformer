@@ -34,7 +34,8 @@ class Encoder(nn.Module):
 
     def forward(self, src, src_mask, src_key_padding_mask):
 
-        input = torch.nan_to_num(src, nan=0)
+        input = torch.nan_to_num(src)
+        # input = src
         input = self.input_fc(input)
         input = self.pos_encoder(input)
         memory = self.transformer_encoder(
@@ -45,7 +46,7 @@ class Encoder(nn.Module):
         # elif self.low_dim == "flatten":
         #     feature = torch.flatten(memory, 1)
         # feature = self.output_fc(feature)
-
+        # print("memory : \n", memory)
         return memory
 
 

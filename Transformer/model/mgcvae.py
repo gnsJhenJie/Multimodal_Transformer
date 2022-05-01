@@ -232,7 +232,6 @@ class MultimodalGenerativeCVAE(object):
         memory_src_mask = generate_square_subsequent_mask(node_history_st.size()[-2], self.device)
         transformer_encoder = self.node_modules[self.node_type + '/node_history_encoder']
         memory = transformer_encoder(node_history_st, memory_src_mask, memory_padding_mask)
-
         ############################
         # Map Information encoding #
         ############################

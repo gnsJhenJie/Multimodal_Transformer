@@ -77,7 +77,7 @@ To train a model with nuScene data, you can execute the command below in `Transf
 | Basic |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag basic_transformer --augment --autoregressive --device "cuda:1" ```|
 | Map_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag CNN_transformer --augment --autoregressive --map_cnn_encoding --device "cuda:1" ```|
 | Map_encoding_ViT |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag ViT_transformer --augment --autoregressive --map_vit_encoding --device "cuda:1" ```|
-| Lane_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag Lane_transformer --augment --autoregressive --lane_cnn_encoding --device "cuda:1" ``` (uncheck)|
+| Lane_encoding_CNN |```python3 train.py --eval_every 1 --vis_every 1 --conf ../experiments/nuScene/config/config.json --data_name nuScenes --preprocess_workers 8 --batch_size 128 --log_dir ../experiments/nuScene/models --train_epochs 20 --node_freq_mult_train --log_tag Lane_transformer --augment --autoregressive --lane_cnn_encoding --device "cuda:1" ``` |
 
 # Evaluate Progress 
     
@@ -87,13 +87,15 @@ To train a model with nuScene data, you can execute the command below in `Transf
         
 If you want to evaluate the trained model to generate trajectories and plot them, you can use `NuScenes Qualitative.ipynb` norebook.<br></br>
 To evaluate a trained model's performance on forecasting vehicles, you can execute a one of the following commands from within the `experiments/nuScenes` directory.
-    
+**1. that the testing dataset will be slightly different between map and lane we filter more data in lane.**<br></br>
+**2. Lane encoding CNN can not use map data but other method could use both data to evaluate.**<br></br>
+
 | Model| Command|
 |:---|:---|
-| Basic |```python evaluate.py --model models/basic_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag basic_transformer --node_type VEHICLE --prediction_horizon 8```|
-| Map_encoding_CNN |```python evaluate.py --model models/CNN_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag CNN_transformer --node_type VEHICLE --prediction_horizon 8```|
-| Map_encoding_ViT |```python evaluate.py --model models/ViT_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag ViT_transformer --node_type VEHICLE --prediction_horizon 8```|
-| Lane_encoding_CNN |```python evaluate.py --model models/Lane_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag Lane_transformer --node_type VEHICLE --prediction_horizon 8```(uncheck)|
+| Basic |```python evaluate.py --model models/basic_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag basic_transformer --node_type VEHICLE --prediction_horizon 12```|
+| Map_encoding_CNN |```python evaluate.py --model models/CNN_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag CNN_transformer --node_type VEHICLE --prediction_horizon 12```|
+| Map_encoding_ViT |```python evaluate.py --model models/ViT_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_map_full.pkl --output_path results --output_tag ViT_transformer --node_type VEHICLE --prediction_horizon 12```|
+| Lane_encoding_CNN |```python evaluate.py --model models/Lane_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_lane_full.pkl --output_path results --output_tag Lane_transformer --node_type VEHICLE --prediction_horizon 12```|
 
 # TODO
 - [ ] Rename Folders and command.

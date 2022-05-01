@@ -96,7 +96,8 @@ if __name__ == "__main__":
                 history_pred, lane_pred = eval_stg.predict(scene,
                                                            timesteps,
                                                            ph,
-                                                           min_future_timesteps=8)
+                                                           min_history_timesteps=hyperparams['minimum_history_length'],
+                                                           min_future_timesteps=ph)
 
                 if not history_pred and not lane_pred:
                     continue
