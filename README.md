@@ -1,6 +1,6 @@
-# THE MOST THANKFUL THINGS FOR THIS PROJECT
-**https://github.com/StanfordASL/Trajectron-plus-plus**.
-Without this repo, I could not complete my whole project!
+# THE MOST THANKFUL THINGS
+**https://github.com/StanfordASL/Trajectron-plus-plus**.<br></br>
+Without this repo, I could not complete my whole project!<br></br>
 All of my project code is based on this repo.
 
 # Directory
@@ -101,13 +101,12 @@ To evaluate a trained model's performance on forecasting vehicles, you can execu
 | Lane_encoding_CNN |```python evaluate.py --model models/Lane_transformer --checkpoint=20 --data ../processed_data/nuScenes_test_lane_full.pkl --output_path results --output_tag Lane_transformer --node_type VEHICLE --prediction_horizon 12```|
 
 # TODO
-- [ ] Rename Folders and command.
-- [ ] Debug Lane preprocess.
-- [ ] Coding plot code for evaluation.
-- [ ] Update the data link with new zip file.
-- [ ] Update the requirment txt to the latest version.
+- [x] Rename Folders and command.
+- [x] Debug Lane preprocess.
+- [x] Coding plot code for evaluation.
+- [x] Update the data link with new zip file.
+- [x] Update the requirment txt to the latest version.
 - [ ] Update the python version.
-- [ ] Update the code structure : 
-    - [ ] Remove unused part.(Pedestrian)
-    - [ ] Rename program name.
-    - [ ] Fix class structure.
+- [x] Update the code structure : 
+    - [x] Remove unused part.(Pedestrian)
+- [ ] Integrate Unit test to repo.
