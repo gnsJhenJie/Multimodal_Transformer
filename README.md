@@ -1,5 +1,8 @@
-# Implementation progress
-https://hackmd.io/tcPg3HmMSC-PXi-XkTUdXA
+# THE MOST THANKFUL THINGS FOR THIS PROJECT
+**https://github.com/StanfordASL/Trajectron-plus-plus**.
+Without this repo, I could not complete my whole project!
+All of my project code is based on this repo.
+
 # Directory
 The Directory of our project.
 
