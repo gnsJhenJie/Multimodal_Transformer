@@ -2,7 +2,7 @@ import unittest
 import torch
 import sys
 
-sys.path.append('../Transformer')
+sys.path.append('./Transformer')
 from model.nn_component import Lane_Encoder
 
 class Test_Neural_Network(unittest.TestCase):
