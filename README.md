@@ -1,3 +1,5 @@
+[![CI](https://github.com/wasn-lab/Multimodal_Transformer/actions/workflows/main.yml/badge.svg)](https://github.com/wasn-lab/Multimodal_Transformer/actions/workflows/main.yml/)
+
 # THE MOST THANKFUL THINGS
 **https://github.com/StanfordASL/Trajectron-plus-plus**.<br></br>
 Without this repo, I could not complete my whole project!<br></br>
