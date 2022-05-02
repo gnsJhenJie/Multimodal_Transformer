@@ -34,19 +34,24 @@ def load_model(model_dir, env, ts=3999):
     if 'incl_robot_node' not in hyperparams:
         hyperparams['incl_robot_node'] = False
 
-    stg = Trajectron(model_registrar, hyperparams,  None, 'cpu')
+    stg = Trajectron(model_registrar, hyperparams, None, 'cpu')
 
     stg.set_environment(env)
 
     return stg, hyperparams
 
 
-def plot_vehicle_nice(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y_min=0):
-    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(predictions,
-                                                                                      dt,
-                                                                                      max_hl,
-                                                                                      ph,
-                                                                                      map=map)
+def plot_vehicle_nice(
+        ax,
+        predictions,
+        dt,
+        max_hl=10,
+        ph=6,
+        map=None,
+        x_min=0,
+        y_min=0):
+    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(
+        predictions, dt, max_hl, ph, map=map)
     assert (len(prediction_dict.keys()) <= 1)
     if len(prediction_dict.keys()) == 0:
         return
@@ -58,13 +63,9 @@ def plot_vehicle_nice(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y
     if map is not None:
         ax.imshow(map.fdata, origin='lower', alpha=0.5)
 
-    cmap = ['k', 'b', 'y', 'g', 'r']
-    line_alpha = 0.7
-    line_width = 0.2
     edge_width = 2
     circle_edge_width = 0.5
     node_circle_size = 0.3
-    a = []
     i = 0
     node_list = sorted(histories_dict.keys(), key=lambda x: x.id)
     for node in node_list:
@@ -82,24 +83,31 @@ def plot_vehicle_nice(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y
                     zorder=650,
                     path_effects=[pe.Stroke(linewidth=5, foreground='k'), pe.Normal()])
 
-            ax.plot(predictions[0, 0, :, 0],
-                    predictions[0, 0, :, 1],
+            ax.plot(predictions[0,
+                                0,
+                                :,
+                                0],
+                    predictions[0,
+                                0,
+                                :,
+                                1],
                     'b--o',
                     linewidth=4,
                     markersize=3,
                     zorder=650,
-                    path_effects=[pe.Stroke(linewidth=5, foreground='k'), pe.Normal()])
+                    path_effects=[pe.Stroke(linewidth=5,
+                                            foreground='k'),
+                                  pe.Normal()])
             # for t in range(predictions.shape[2]):
             #     sns.kdeplot(predictions[0, :, t, 0], predictions[0, :, t, 1],
             #                 ax=ax, shade=True, shade_lowest=False,
-            #                 color=line_colors[i % len(line_colors)], zorder=600, alpha=0.8)
+            # color=line_colors[i % len(line_colors)], zorder=600, alpha=0.8)
 
-            vel = node.get(np.array([ts_key]), {'velocity': ['x', 'y']})
-            h = np.arctan2(vel[0, 1], vel[0, 0])
-            r_img = rotate(cars[i % len(cars)], node.get(np.array([ts_key]), {'heading': ['°']})[0, 0] * 180 / np.pi,
-                           reshape=True)
+            r_img = rotate(cars[i % len(cars)], node.get(np.array([ts_key]), {
+                           'heading': ['°']})[0, 0] * 180 / np.pi, reshape=True)
             oi = OffsetImage(r_img, zoom=0.025, zorder=700)
-            veh_box = AnnotationBbox(oi, (history[-1, 0], history[-1, 1]), frameon=False)
+            veh_box = AnnotationBbox(
+                oi, (history[-1, 0], history[-1, 1]), frameon=False)
             veh_box.zorder = 700
             ax.add_artist(veh_box)
             i += 1
@@ -111,11 +119,8 @@ def plot_vehicle_nice(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y
                             ax=ax, shade=True, shade_lowest=False,
                             color='b', zorder=600, alpha=0.8)
 
-            ax.plot(future[:, 0],
-                    future[:, 1],
-                    'w--',
-                    zorder=650,
-                    path_effects=[pe.Stroke(linewidth=edge_width, foreground='k'), pe.Normal()])
+            ax.plot(future[:, 0], future[:, 1], 'w--', zorder=650, path_effects=[
+                    pe.Stroke(linewidth=edge_width, foreground='k'), pe.Normal()])
             # Current Node Position
             circle = plt.Circle((history[-1, 0],
                                  history[-1, 1]),
@@ -127,12 +132,17 @@ def plot_vehicle_nice(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y
             ax.add_artist(circle)
 
 
-def plot_vehicle_mm(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y_min=0):
-    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(predictions,
-                                                                                      dt,
-                                                                                      max_hl,
-                                                                                      ph,
-                                                                                      map=map)
+def plot_vehicle_mm(
+        ax,
+        predictions,
+        dt,
+        max_hl=10,
+        ph=6,
+        map=None,
+        x_min=0,
+        y_min=0):
+    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(
+        predictions, dt, max_hl, ph, map=map)
     assert (len(prediction_dict.keys()) <= 1)
     if len(prediction_dict.keys()) == 0:
         return
@@ -145,40 +155,53 @@ def plot_vehicle_mm(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y_m
     if map is not None:
         ax.imshow(map.fdata, origin='lower', alpha=0.5)
 
-    cmap = ['k', 'b', 'y', 'g', 'r']
-    line_alpha = 0.7
-    line_width = 0.2
-    edge_width = 2
-    circle_edge_width = 0.5
-    node_circle_size = 0.5
-    a = []
-    i = 0
     node_list = sorted(histories_dict.keys(), key=lambda x: x.id)
     for node in node_list:
-        history = histories_dict[node] + np.array([x_min, y_min])
-        future = futures_dict[node] + np.array([x_min, y_min])
 
         predictions = prediction_dict[node] + np.array([x_min, y_min])
         if node.type.name == 'VEHICLE':
             for sample_num in range(prediction_dict[node].shape[1]):
-                ax.plot(predictions[:, sample_num, :, 0], predictions[:, sample_num, :, 1], 'ko-',
+                ax.plot(predictions[:,
+                                    sample_num,
+                                    :,
+                                    0],
+                        predictions[:,
+                                    sample_num,
+                                    :,
+                                    1],
+                        'ko-',
                         zorder=620,
                         markersize=5,
-                        linewidth=3, alpha=0.7)
+                        linewidth=3,
+                        alpha=0.7)
         else:
             for sample_num in range(prediction_dict[node].shape[1]):
-                ax.plot(predictions[:, sample_num, :, 0], predictions[:, sample_num, :, 1], 'ko-',
+                ax.plot(predictions[:,
+                                    sample_num,
+                                    :,
+                                    0],
+                        predictions[:,
+                                    sample_num,
+                                    :,
+                                    1],
+                        'ko-',
                         zorder=620,
                         markersize=2,
-                        linewidth=1, alpha=0.7)
+                        linewidth=1,
+                        alpha=0.7)
 
 
-def plot_vehicle_nice_mv(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y_min=0):
-    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(predictions,
-                                                                                      dt,
-                                                                                      max_hl,
-                                                                                      ph,
-                                                                                      map=map)
+def plot_vehicle_nice_mv(
+        ax,
+        predictions,
+        dt,
+        max_hl=10,
+        ph=6,
+        map=None,
+        x_min=0,
+        y_min=0):
+    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(
+        predictions, dt, max_hl, ph, map=map)
     assert (len(prediction_dict.keys()) <= 1)
     if len(prediction_dict.keys()) == 0:
         return
@@ -191,31 +214,39 @@ def plot_vehicle_nice_mv(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0
     if map is not None:
         ax.imshow(map.fdata, origin='lower', alpha=0.5)
 
-    cmap = ['k', 'b', 'y', 'g', 'r']
-    line_alpha = 0.7
-    line_width = 0.2
-    edge_width = 2
     circle_edge_width = 0.5
     node_circle_size = 0.3
-    a = []
     i = 0
     node_list = sorted(histories_dict.keys(), key=lambda x: x.id)
     for node in node_list:
         h = node.get(np.array([ts_key]), {'heading': ['°']})[0, 0]
         history_org = histories_dict[node] + np.array([x_min, y_min])
-        history = histories_dict[node] + np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
-        future = futures_dict[node] + np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
-        predictions = prediction_dict[node] + np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
+        history = histories_dict[node] + \
+            np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
+        predictions = prediction_dict[node] + np.array(
+            [x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
         if node.type.name == 'VEHICLE':
             for t in range(predictions.shape[2]):
-                sns.kdeplot(predictions[0, :, t, 0], predictions[0, :, t, 1],
-                            ax=ax, shade=True, shade_lowest=False,
-                            color=line_colors[i % len(line_colors)], zorder=600, alpha=1.0)
+                sns.kdeplot(predictions[0,
+                                        :,
+                                        t,
+                                        0],
+                            predictions[0,
+                                        :,
+                                        t,
+                                        1],
+                            ax=ax,
+                            shade=True,
+                            shade_lowest=False,
+                            color=line_colors[i % len(line_colors)],
+                            zorder=600,
+                            alpha=1.0)
 
-            r_img = rotate(cars[i % len(cars)], node.get(np.array([ts_key]), {'heading': ['°']})[0, 0] * 180 / np.pi,
-                           reshape=True)
+            r_img = rotate(cars[i % len(cars)], node.get(np.array([ts_key]), {
+                           'heading': ['°']})[0, 0] * 180 / np.pi, reshape=True)
             oi = OffsetImage(r_img, zoom=0.08, zorder=700)
-            veh_box = AnnotationBbox(oi, (history_org[-1, 0], history_org[-1, 1]), frameon=False)
+            veh_box = AnnotationBbox(
+                oi, (history_org[-1, 0], history_org[-1, 1]), frameon=False)
             veh_box.zorder = 700
             ax.add_artist(veh_box)
             i += 1
@@ -237,12 +268,17 @@ def plot_vehicle_nice_mv(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0
             ax.add_artist(circle)
 
 
-def plot_vehicle_nice_mv_robot(ax, predictions, dt, max_hl=10, ph=6, map=None, x_min=0, y_min=0):
-    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(predictions,
-                                                                                      dt,
-                                                                                      max_hl,
-                                                                                      ph,
-                                                                                      map=map)
+def plot_vehicle_nice_mv_robot(
+        ax,
+        predictions,
+        dt,
+        max_hl=10,
+        ph=6,
+        map=None,
+        x_min=0,
+        y_min=0):
+    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(
+        predictions, dt, max_hl, ph, map=map)
     assert (len(prediction_dict.keys()) <= 1)
     if len(prediction_dict.keys()) == 0:
         return
@@ -255,19 +291,13 @@ def plot_vehicle_nice_mv_robot(ax, predictions, dt, max_hl=10, ph=6, map=None, x
     if map is not None:
         ax.imshow(map.fdata, origin='lower', alpha=0.5)
 
-    cmap = ['k', 'b', 'y', 'g', 'r']
-    line_alpha = 0.7
-    line_width = 0.2
-    edge_width = 2
-    circle_edge_width = 0.5
-    node_circle_size = 0.3
-
     node_list = sorted(histories_dict.keys(), key=lambda x: x.id)
     for node in node_list:
         h = node.get(np.array([ts_key]), {'heading': ['°']})[0, 0]
-        history_org = histories_dict[node] + np.array([x_min, y_min]) + 5 / 2 * np.array(
-            [np.cos(h), np.sin(h)])
-        future = futures_dict[node] + np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
+        history_org = histories_dict[node] + np.array(
+            [x_min, y_min]) + 5 / 2 * np.array([np.cos(h), np.sin(h)])
+        future = futures_dict[node] + \
+            np.array([x_min, y_min]) + 5 * np.array([np.cos(h), np.sin(h)])
 
         ax.plot(future[:, 0],
                 future[:, 1],
@@ -278,9 +308,11 @@ def plot_vehicle_nice_mv_robot(ax, predictions, dt, max_hl=10, ph=6, map=None, x
                 zorder=650,
                 path_effects=[pe.Stroke(linewidth=5, foreground='k'), pe.Normal()])
 
-        r_img = rotate(robot, node.get(np.array([ts_key]), {'heading': ['°']})[0, 0] * 180 / np.pi, reshape=True)
+        r_img = rotate(robot, node.get(np.array([ts_key]), {'heading': ['°']})[
+                       0, 0] * 180 / np.pi, reshape=True)
         oi = OffsetImage(r_img, zoom=0.08, zorder=700)
-        veh_box = AnnotationBbox(oi, (history_org[-1, 0], history_org[-1, 1]), frameon=False)
+        veh_box = AnnotationBbox(
+            oi, (history_org[-1, 0], history_org[-1, 1]), frameon=False)
         veh_box.zorder = 700
         ax.add_artist(veh_box)
 

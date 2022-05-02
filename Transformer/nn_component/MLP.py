@@ -9,7 +9,7 @@ class Mlp(nn.Module):
         input_size = (1, in_channels)
         # input_test = torch.ones(input_size)
         self.layer_seq = nn.Sequential()
-        for i in range(layer_num-1):  # minus 1 for output_layer
+        for i in range(layer_num - 1):  # minus 1 for output_layer
             self.layer_seq.add_module(f'lmlp_{i}', nn.Sequential(
                 nn.Linear(in_channels, in_channels),
                 nn.LayerNorm(in_channels),

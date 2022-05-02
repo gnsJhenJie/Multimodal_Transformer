@@ -19,7 +19,8 @@ class DiscreteLatent(object):
 
     def dist_from_h(self, h, mode):
         logits_separated = torch.reshape(h, (-1, self.N, self.K))
-        logits_separated_mean_zero = logits_separated - torch.mean(logits_separated, dim=-1, keepdim=True)
+        logits_separated_mean_zero = logits_separated - \
+            torch.mean(logits_separated, dim=-1, keepdim=True)
         if self.z_logit_clip is not None and mode == ModeKeys.TRAIN:
             c = self.z_logit_clip
             logits = torch.clamp(logits_separated_mean_zero, min=-c, max=c)
@@ -31,33 +32,51 @@ class DiscreteLatent(object):
     def sample_q(self, num_samples, mode):
         bs = self.p_dist.probs.size()[0]
         num_components = self.N * self.K
-        z_NK = torch.from_numpy(self.all_one_hot_combinations(self.N, self.K)).float().to(self.device).repeat(num_samples, bs)
-        return torch.reshape(z_NK, (num_samples * num_components, -1, self.z_dim))
+        z_NK = torch.from_numpy(self.all_one_hot_combinations(
+            self.N, self.K)).float().to(self.device).repeat(num_samples, bs)
+        return torch.reshape(
+            z_NK, (num_samples * num_components, -1, self.z_dim))
 
-    def sample_p(self, num_samples, mode, most_likely_z=False, full_dist=True, all_z_sep=False):
+    def sample_p(
+            self,
+            num_samples,
+            mode,
+            most_likely_z=False,
+            full_dist=True,
+            all_z_sep=False):
         num_components = 1
         if full_dist:
             bs = self.p_dist.probs.size()[0]
-            z_NK = torch.from_numpy(self.all_one_hot_combinations(self.N, self.K)).float().to(self.device).repeat(num_samples, bs)
+            z_NK = torch.from_numpy(
+                self.all_one_hot_combinations(
+                    self.N,
+                    self.K)).float().to(
+                self.device).repeat(
+                num_samples,
+                bs)
             num_components = self.K ** self.N
             k = num_samples * num_components
         elif all_z_sep:
             bs = self.p_dist.probs.size()[0]
-            z_NK = torch.from_numpy(self.all_one_hot_combinations(self.N, self.K)).float().to(self.device).repeat(1, bs)
+            z_NK = torch.from_numpy(self.all_one_hot_combinations(
+                self.N, self.K)).float().to(self.device).repeat(1, bs)
             k = self.K ** self.N
             num_samples = k
         elif most_likely_z:
             # Sampling the most likely z from p(z|x).
-            eye_mat = torch.eye(self.p_dist.event_shape[-1], device=self.device)
+            eye_mat = torch.eye(
+                self.p_dist.event_shape[-1], device=self.device)
             argmax_idxs = torch.argmax(self.p_dist.probs, dim=2)
-            z_NK = torch.unsqueeze(eye_mat[argmax_idxs], dim=0).expand(num_samples, -1, -1, -1)
+            z_NK = torch.unsqueeze(eye_mat[argmax_idxs], dim=0).expand(
+                num_samples, -1, -1, -1)
             k = num_samples
         else:
             z_NK = self.p_dist.sample((num_samples,))
             k = num_samples
 
         if mode == ModeKeys.PREDICT:
-            return torch.reshape(z_NK, (k, -1, self.N * self.K)), num_samples, num_components
+            return torch.reshape(
+                z_NK, (k, -1, self.N * self.K)), num_samples, num_components
         else:
             return torch.reshape(z_NK, (k, -1, self.N * self.K))
 
@@ -69,7 +88,8 @@ class DiscreteLatent(object):
         kl_minibatch = torch.mean(kl_separated, dim=0, keepdim=True)
 
         if log_writer is not None:
-            log_writer.add_scalar(prefix + '/true_kl', torch.sum(kl_minibatch), curr_iter)
+            log_writer.add_scalar(prefix + '/true_kl',
+                                  torch.sum(kl_minibatch), curr_iter)
 
         if self.kl_min > 0:
             kl_lower_bounded = torch.clamp(kl_minibatch, min=self.kl_min)
@@ -94,13 +114,19 @@ class DiscreteLatent(object):
 
     @staticmethod
     def all_one_hot_combinations(N, K):
-        return np.eye(K).take(np.reshape(np.indices([K] * N), [N, -1]).T, axis=0).reshape(-1, N * K)  # [K**N, N*K]
+        # [K**N, N*K]
+        return np.eye(K).take(np.reshape(np.indices(
+            [K] * N), [N, -1]).T, axis=0).reshape(-1, N * K)
 
     def summarize_for_tensorboard(self, log_writer, prefix, curr_iter):
-        log_writer.add_histogram(prefix + "/latent/p_z_x", self.p_dist.probs, curr_iter)
-        log_writer.add_histogram(prefix + "/latent/q_z_xy", self.q_dist.probs, curr_iter)
-        log_writer.add_histogram(prefix + "/latent/p_z_x_logits", self.p_dist.logits, curr_iter)
-        log_writer.add_histogram(prefix + "/latent/q_z_xy_logits", self.q_dist.logits, curr_iter)
+        log_writer.add_histogram(
+            prefix + "/latent/p_z_x", self.p_dist.probs, curr_iter)
+        log_writer.add_histogram(
+            prefix + "/latent/q_z_xy", self.q_dist.probs, curr_iter)
+        log_writer.add_histogram(
+            prefix + "/latent/p_z_x_logits", self.p_dist.logits, curr_iter)
+        log_writer.add_histogram(
+            prefix + "/latent/q_z_xy_logits", self.q_dist.logits, curr_iter)
         if self.z_dim <= 9:
             for i in range(self.N):
                 for j in range(self.K):

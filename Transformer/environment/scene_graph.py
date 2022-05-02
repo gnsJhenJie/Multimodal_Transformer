@@ -145,25 +145,29 @@ class TemporalSceneGraph(object):
                 # RingBuffers do not have a fixed constant size. Instead, they grow up to their capacity. Thus,
                 # we need to fill the values preceding the RingBuffer values with NaNs to make them fill the
                 # position_cube.
-                position_cube[-scene_temp_dict[node].shape[0]:, node_idx] = scene_temp_dict[node]
+                position_cube[-scene_temp_dict[node].shape[0]:,
+                              node_idx] = scene_temp_dict[node]
             else:
                 position_cube[:, node_idx] = scene_temp_dict[node]
 
             node_type_mat[:, node_idx] = node.type.value
             for node_idx_from, node_from in enumerate(nodes):
-                node_attention_mat[node_idx_from, node_idx] = attention_radius[(node_from.type, node.type)]
+                node_attention_mat[node_idx_from, node_idx] = attention_radius[(
+                    node_from.type, node.type)]
 
         np.fill_diagonal(node_type_mat, 0)
 
         for timestep in range(position_cube.shape[0]):
-            dists = squareform(pdist(position_cube[timestep], metric='euclidean'))
+            dists = squareform(
+                pdist(position_cube[timestep], metric='euclidean'))
 
             # Put a 1 for all agent pairs which are closer than the edge_radius.
             # Can produce a warning as dists can be nan if no data for node is available.
             # This is accepted as nan <= x evaluates to False
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                adj_matrix = (dists <= node_attention_mat).astype(np.int8) * node_type_mat
+                adj_matrix = (dists <= node_attention_mat).astype(
+                    np.int8) * node_type_mat
 
             # Remove self-loops.
             np.fill_diagonal(adj_matrix, 0)
@@ -178,7 +182,8 @@ class TemporalSceneGraph(object):
                                 where=(dist_cube > 0.))
         edge_scaling = None
         if edge_addition_filter is not None and edge_removal_filter is not None:
-            edge_scaling = cls.calculate_edge_scaling(adj_cube, edge_addition_filter, edge_removal_filter)
+            edge_scaling = cls.calculate_edge_scaling(
+                adj_cube, edge_addition_filter, edge_removal_filter)
         tsg = cls(attention_radius,
                   np.array(list(nodes)),
                   adj_cube, weight_cube,
@@ -187,17 +192,31 @@ class TemporalSceneGraph(object):
         return tsg
 
     @staticmethod
-    def calculate_edge_scaling(adj_cube, edge_addition_filter, edge_removal_filter):
-        shifted_right = np.pad(adj_cube, ((len(edge_addition_filter) - 1, 0), (0, 0), (0, 0)), 'constant', constant_values=0)
+    def calculate_edge_scaling(
+            adj_cube,
+            edge_addition_filter,
+            edge_removal_filter):
+        shifted_right = np.pad(adj_cube, ((len(
+            edge_addition_filter) - 1, 0), (0, 0), (0, 0)), 'constant', constant_values=0)
 
         new_edges = np.minimum(
-            ss.convolve(shifted_right, np.reshape(edge_addition_filter, (-1, 1, 1)), 'full'), 1.
-        )[(len(edge_addition_filter) - 1):-(len(edge_addition_filter) - 1)]
+            ss.convolve(
+                shifted_right,
+                np.reshape(
+                    edge_addition_filter,
+                    (-1,
+                     1,
+                     1)),
+                'full'),
+            1.)[
+                (len(edge_addition_filter) - 1):-(
+                    len(edge_addition_filter) - 1)]
 
         new_edges[adj_cube == 0] = 0
 
         result = np.minimum(
-            ss.convolve(new_edges, np.reshape(edge_removal_filter, (-1, 1, 1)), 'full'), 1.
+            ss.convolve(new_edges, np.reshape(edge_removal_filter, (-1,
+                                                                    1, 1)), 'full'), 1.
         )[:-(len(edge_removal_filter) - 1)]
 
         return result
@@ -211,17 +230,19 @@ class TemporalSceneGraph(object):
         :param t_fut: Number of future timesteps which are considered to form edges in Scene Graph.
         :return: SceneGraph
         """
-        lower_t = np.clip(t-t_hist, a_min=0, a_max=None)
-        higher_t = np.clip(t + t_fut + 1, a_min=None, a_max=self.adj_cube.shape[0] + 1)
+        lower_t = np.clip(t - t_hist, a_min=0, a_max=None)
+        higher_t = np.clip(t + t_fut + 1, a_min=None,
+                           a_max=self.adj_cube.shape[0] + 1)
         adj_mat = np.max(self.adj_cube[lower_t:higher_t], axis=0)
         weight_mat = np.max(self.weight_cube[lower_t:higher_t], axis=0)
-        return SceneGraph(self.edge_radius,
-                          self.nodes,
-                          adj_mat,
-                          weight_mat,
-                          self.node_type_mat,
-                          self.node_index_lookup,
-                          edge_scaling=self.edge_scaling[t] if self.edge_scaling is not None else None)
+        return SceneGraph(
+            self.edge_radius,
+            self.nodes,
+            adj_mat,
+            weight_mat,
+            self.node_type_mat,
+            self.node_index_lookup,
+            edge_scaling=self.edge_scaling[t] if self.edge_scaling is not None else None)
 
 
 class SceneGraph(object):
@@ -259,7 +280,8 @@ class SceneGraph(object):
         """
         node_index = self.get_index(node)
         connection_mask = self.get_connection_mask(node_index)
-        mask = ((self.node_type_mat[node_index] == node_type.value) * connection_mask)
+        mask = ((self.node_type_mat[node_index] ==
+                 node_type.value) * connection_mask)
         return self.nodes[mask]
 
     def get_edge_scaling(self, node=None):
@@ -279,14 +301,15 @@ class SceneGraph(object):
             return self.weight_mat[node_index, connection_mask]
 
     def get_connection_mask(self, node_index):
-        if self.edge_scaling is None: # We do not use edge scaling
+        if self.edge_scaling is None:  # We do not use edge scaling
             return self.adj_mat[node_index] > 0.
         else:
             return self.edge_scaling[node_index] > 1e-2
 
     def __sub__(self, other):
         new_nodes = [node for node in self.nodes if node not in other.nodes]
-        removed_nodes = [node for node in other.nodes if node not in self.nodes]
+        removed_nodes = [
+            node for node in other.nodes if node not in self.nodes]
 
         our_types = set(node.type for node in self.nodes)
         other_types = set(node.type for node in other.nodes)
@@ -299,14 +322,17 @@ class SceneGraph(object):
 
             if node in other.nodes:
                 for node_type in all_node_types:
-                    new_items = set(self.get_neighbors(node, node_type)) - set(other.get_neighbors(node, node_type))
+                    new_items = set(self.get_neighbors(
+                        node, node_type)) - set(other.get_neighbors(node, node_type))
                     if len(new_items) > 0:
-                        new_neighbors[node][DirectedEdge.get_edge_type(node, Node(node_type, None, None))] = new_items
+                        new_neighbors[node][DirectedEdge.get_edge_type(
+                            node, Node(node_type, None, None))] = new_items
             else:
                 for node_type in our_types:
                     neighbors = self.get_neighbors(node, node_type)
                     if len(neighbors) > 0:
-                        new_neighbors[node] = {DirectedEdge.get_edge_type(node, Node(node_type, None, None)): set(neighbors)}
+                        new_neighbors[node] = {DirectedEdge.get_edge_type(
+                            node, Node(node_type, None, None)): set(neighbors)}
 
         removed_neighbors = defaultdict(dict)
         for node in other.nodes:
@@ -315,14 +341,17 @@ class SceneGraph(object):
 
             if node in self.nodes:
                 for node_type in all_node_types:
-                    removed_items = set(other.get_neighbors(node, node_type)) - set(self.get_neighbors(node, node_type))
+                    removed_items = set(other.get_neighbors(
+                        node, node_type)) - set(self.get_neighbors(node, node_type))
                     if len(removed_items) > 0:
-                        removed_neighbors[node][DirectedEdge.get_edge_type(node, Node(node_type, None, None))] = removed_items
+                        removed_neighbors[node][DirectedEdge.get_edge_type(
+                            node, Node(node_type, None, None))] = removed_items
             else:
                 for node_type in other_types:
                     neighbors = other.get_neighbors(node, node_type)
                     if len(neighbors) > 0:
-                        removed_neighbors[node] = {DirectedEdge.get_edge_type(node, Node(node_type, None, None)): set(neighbors)}
+                        removed_neighbors[node] = {DirectedEdge.get_edge_type(
+                            node, Node(node_type, None, None)): set(neighbors)}
 
         return new_nodes, removed_nodes, new_neighbors, removed_neighbors
 
@@ -348,20 +377,23 @@ if __name__ == '__main__':
         print(A[:, 0, 0])
 
         start = time.time()
-        new_edges = np.minimum(ss.convolve(A, np.reshape(edge_addition_filter, (-1, 1, 1)), 'full'), 1.)[(len(edge_addition_filter) - 1):]
-        old_edges = np.minimum(ss.convolve(A, np.reshape(edge_removal_filter, (-1, 1, 1)), 'full'), 1.)[:-(len(edge_removal_filter) - 1)]
+        new_edges = np.minimum(ss.convolve(A, np.reshape(
+            edge_addition_filter, (-1, 1, 1)), 'full'), 1.)[(len(edge_addition_filter) - 1):]
+        old_edges = np.minimum(ss.convolve(A, np.reshape(
+            edge_removal_filter, (-1, 1, 1)), 'full'), 1.)[:-(len(edge_removal_filter) - 1)]
         res = np.minimum(new_edges + old_edges, 1.)[:, 0, 0]
         end = time.time()
         print(end - start)
         print(res)
 
         start = time.time()
-        res = TemporalSceneGraph.calculate_edge_scaling(A, edge_addition_filter, edge_removal_filter)[:, 0, 0]
+        res = TemporalSceneGraph.calculate_edge_scaling(
+            A, edge_addition_filter, edge_removal_filter)[:, 0, 0]
         end = time.time()
         print(end - start)
         print(res)
 
-        print('-'*40)
+        print('-' * 40)
 
     # # # # # # # # # # # # # # #
     # Testing graph subtraction #

@@ -6,13 +6,21 @@ import numpy as np
 
 class Lane_Encoder(nn.Module):
     # encode raster map and output encoding tensor
-    def __init__(self, layers, embedding_size, output_channels, output_size, kernel_size, strides):
+    def __init__(
+            self,
+            layers,
+            embedding_size,
+            output_channels,
+            output_size,
+            kernel_size,
+            strides):
         super(Lane_Encoder, self).__init__()
         # Using dummy input to initialize the neural networks parameter
 
         x_dummy = torch.zeros((1, 2, 10))
         self.convs = nn.ModuleList()
-        self.convs.append(nn.Conv1d(embedding_size, output_channels, kernel_size, strides))
+        self.convs.append(
+            nn.Conv1d(embedding_size, output_channels, kernel_size, strides))
         x_dummy = self.convs[0](x_dummy)
         # print("x_dummy size : ", x_dummy.size())
         x_dummy = torch.flatten(x_dummy, start_dim=1)
@@ -40,6 +48,7 @@ if __name__ == "__main__":
             }
         }
     }
+
     me_params = dictionary["lane_encoder"]["VEHICLE"]
     test = Lane_Encoder(
         me_params["layers"],

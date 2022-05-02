@@ -9,7 +9,17 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer, TransformerDec
 
 
 class Encoder(nn.Module):
-    def __init__(self, ninp=8, ntimestep=9, in_dim=128, nhead=2, fdim=256, nlayers=6, noutput=32, dropout=0.2, low_dim="sum"):
+    def __init__(
+            self,
+            ninp=8,
+            ntimestep=9,
+            in_dim=128,
+            nhead=2,
+            fdim=256,
+            nlayers=6,
+            noutput=32,
+            dropout=0.2,
+            low_dim="sum"):
         super(Encoder, self).__init__()
 
         self.model_type = 'Transformer'
@@ -22,7 +32,7 @@ class Encoder(nn.Module):
         if self.low_dim == "sum":
             self.output_fc = nn.Linear(in_dim, noutput)
         elif self.low_dim == "flatten":
-            self.output_fc = nn.Linear(in_dim*ntimestep, noutput)
+            self.output_fc = nn.Linear(in_dim * ntimestep, noutput)
         # self.init_weights()
 
     def init_weights(self) -> None:
@@ -50,7 +60,15 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, nlayers, ninp, in_dim, nhead, fdim, noutput, dropout=0.2):
+    def __init__(
+            self,
+            nlayers,
+            ninp,
+            in_dim,
+            nhead,
+            fdim,
+            noutput,
+            dropout=0.2):
         super().__init__()
 
         self.model_type = 'Transformer'
@@ -70,11 +88,22 @@ class Decoder(nn.Module):
         torch.nn.init.xavier_normal_(self.output_fc.weight)
 
     @abc.abstractmethod
-    def forward(self, tgt, memory, tgt_mask, memory_mask, memory_key_padding_mask):
+    def forward(
+            self,
+            tgt,
+            memory,
+            tgt_mask,
+            memory_mask,
+            memory_key_padding_mask):
         # input tgt => target last time state
 
-        output = self.transformer_decoder(self.pos_encoder(self.input_fc(
-            tgt)), memory, tgt_mask=tgt_mask, memory_mask=memory_mask, memory_key_padding_mask=memory_key_padding_mask)
+        output = self.transformer_decoder(
+            self.pos_encoder(
+                self.input_fc(tgt)),
+            memory,
+            tgt_mask=tgt_mask,
+            memory_mask=memory_mask,
+            memory_key_padding_mask=memory_key_padding_mask)
         output = self.output_fc(output)
 
         return output
@@ -124,11 +153,26 @@ class Lane_Decoder(Decoder):
 
 
 class Trajectory_Decoder(Decoder):
-    def __init__(self, tgt_inp, lane_inp, in_dim, nhead, fdim, nlayers, noutput):
+    def __init__(
+            self,
+            tgt_inp,
+            lane_inp,
+            in_dim,
+            nhead,
+            fdim,
+            nlayers,
+            noutput):
         super().__init__(nlayers, tgt_inp, in_dim, nhead, fdim, noutput)
         self.mix_fc = nn.Linear(lane_inp + in_dim, in_dim)
 
-    def forward(self, tgt, memory, tgt_mask, memory_mask, memory_key_padding_mask, lane_feature=None):
+    def forward(
+            self,
+            tgt,
+            memory,
+            tgt_mask,
+            memory_mask,
+            memory_key_padding_mask,
+            lane_feature=None):
         """ To inference the Decoder
 
         Args:
@@ -145,7 +189,11 @@ class Trajectory_Decoder(Decoder):
         if lane_feature is not None:
             mix_Tensor = torch.cat([memory, lane_feature], dim=-1)
             memory = self.mix_fc(mix_Tensor)
-        output = self.transformer_decoder(self.pos_encoder(self.input_fc(
-            tgt)), memory, tgt_mask=tgt_mask, memory_key_padding_mask=memory_key_padding_mask)
+        output = self.transformer_decoder(
+            self.pos_encoder(
+                self.input_fc(tgt)),
+            memory,
+            tgt_mask=tgt_mask,
+            memory_key_padding_mask=memory_key_padding_mask)
         output = self.output_fc(output)
         return output

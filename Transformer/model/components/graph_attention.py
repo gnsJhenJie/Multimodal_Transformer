@@ -8,22 +8,31 @@ from torch.nn import init, Parameter
 
 
 class GraphMultiTypeAttention(nn.Module):
-    def __init__(self, in_features, hidden_features, out_features, bias=True, types=1):
+    def __init__(
+            self,
+            in_features,
+            hidden_features,
+            out_features,
+            bias=True,
+            types=1):
         super(GraphMultiTypeAttention, self).__init__()
         self.types = types
         self.in_features = in_features
         self.out_features = out_features
-        self.node_self_loop_weight = Parameter(torch.tensor(hidden_features, in_features[0]))
+        self.node_self_loop_weight = Parameter(
+            torch.tensor(hidden_features, in_features[0]))
 
         self.weight_per_type = nn.ParameterList()
         for i in range(types):
-            self.weight_per_type.append(Parameter(torch.tensor(hidden_features, in_features[i])))
+            self.weight_per_type.append(
+                Parameter(torch.tensor(hidden_features, in_features[i])))
         if bias:
             self.bias = Parameter(torch.tensor(hidden_features))
         else:
             self.register_parameter('bias', None)
 
-        self.linear_to_out = nn.Linear(hidden_features, out_features, bias=bias)
+        self.linear_to_out = nn.Linear(
+            hidden_features, out_features, bias=bias)
 
         self.reset_parameters()
 
@@ -39,7 +48,10 @@ class GraphMultiTypeAttention(nn.Module):
     def forward(self, inputs, types, edge_weights):
         weight_list = list()
         for i, type in enumerate(types):
-            weight_list.append((edge_weights[i] / len(edge_weights)) * self.weight_per_type[type].T)
+            weight_list.append(
+                (edge_weights[i] /
+                 len(edge_weights)) *
+                self.weight_per_type[type].T)
         weight_list.append(self.node_self_loop_weight.T)
         weight = torch.cat(weight_list, dim=0)
         stacked_input = torch.cat(inputs, dim=-1)
@@ -54,5 +66,4 @@ class GraphMultiTypeAttention(nn.Module):
 
     def extra_repr(self):
         return 'in_features={}, hidden_features={},, out_features={}, types={}, bias={}'.format(
-            self.in_features, self.hidden_features, self.out_features, self.types, self.bias is not None
-        )
+            self.in_features, self.hidden_features, self.out_features, self.types, self.bias is not None)

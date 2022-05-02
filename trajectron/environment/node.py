@@ -6,8 +6,19 @@ from ncls import NCLS
 
 
 class Node(object):
-    def __init__(self, node_type, node_id, data, length=None, width=None, height=None, first_timestep=0,
-                 is_robot=False, description="", frequency_multiplier=1, non_aug_node=None):
+    def __init__(
+            self,
+            node_type,
+            node_id,
+            data,
+            length=None,
+            width=None,
+            height=None,
+            first_timestep=0,
+            is_robot=False,
+            description="",
+            frequency_multiplier=1,
+            non_aug_node=None):
         self.type = node_type
         self.id = node_id
         self.length = length
@@ -18,7 +29,8 @@ class Node(object):
 
         if data is not None:
             if isinstance(data, pd.DataFrame):
-                self.data = DoubleHeaderNumpyArray(data.values, list(data.columns))
+                self.data = DoubleHeaderNumpyArray(
+                    data.values, list(data.columns))
             elif isinstance(data, DoubleHeaderNumpyArray):
                 self.data = data
         else:
@@ -46,7 +58,11 @@ class Node(object):
     def __repr__(self):
         return '/'.join([self.type.name, self.id])
 
-    def overwrite_data(self, data, header, forward_in_time_on_next_overwrite=False):
+    def overwrite_data(
+            self,
+            data,
+            header,
+            forward_in_time_on_next_overwrite=False):
         """
         This function hard overwrites the data matrix. When using it you have to make sure that the columns
         in the new data matrix correspond to the old structure. As well as setting first_timestep.
@@ -76,7 +92,9 @@ class Node(object):
         """
         paddingl = (self.first_timestep - scene_ts[0]).clip(0)
         paddingu = (scene_ts[1] - self.last_timestep).clip(0)
-        ts = np.array(scene_ts).clip(min=self.first_timestep, max=self.last_timestep) - self.first_timestep
+        ts = np.array(scene_ts).clip(
+            min=self.first_timestep,
+            max=self.last_timestep) - self.first_timestep
         return ts, paddingl, paddingu
 
     def history_points_at(self, ts) -> int:
@@ -102,7 +120,8 @@ class Node(object):
         length = tr_scene[1] - tr_scene[0] + 1  # tr is inclusive
         tr, paddingl, paddingu = self.scene_ts_to_node_ts(tr_scene)
         data_array = self.data[tr[0]:tr[1] + 1, state]
-        padded_data_array = np.full((length, data_array.shape[1]), fill_value=padding)
+        padded_data_array = np.full(
+            (length, data_array.shape[1]), fill_value=padding)
         padded_data_array[paddingl:length - paddingu] = data_array
         return padded_data_array
 
@@ -129,16 +148,21 @@ class Node(object):
 
 class MultiNode(Node):
     def __init__(self, node_type, node_id, nodes_list, is_robot=False):
-        super(MultiNode, self).__init__(node_type, node_id, data=None, is_robot=is_robot)
+        super(MultiNode, self).__init__(
+            node_type, node_id, data=None, is_robot=is_robot)
         self.nodes_list = nodes_list
         for node in self.nodes_list:
             node.is_robot = is_robot
 
-        self.first_timestep = min(node.first_timestep for node in self.nodes_list)
-        self._last_timestep = max(node.last_timestep for node in self.nodes_list)
+        self.first_timestep = min(
+            node.first_timestep for node in self.nodes_list)
+        self._last_timestep = max(
+            node.last_timestep for node in self.nodes_list)
 
-        starts = np.array([node.first_timestep for node in self.nodes_list], dtype=np.int64)
-        ends = np.array([node.last_timestep for node in self.nodes_list], dtype=np.int64)
+        starts = np.array(
+            [node.first_timestep for node in self.nodes_list], dtype=np.int64)
+        ends = np.array(
+            [node.last_timestep for node in self.nodes_list], dtype=np.int64)
         ids = np.arange(len(self.nodes_list), dtype=np.int64)
         self.interval_tree = NCLS(starts, ends, ids)
 
@@ -161,7 +185,8 @@ class MultiNode(Node):
         return non_overlapping_nodes
 
     def get_node_at_timesteps(self, scene_ts) -> Node:
-        possible_node_ranges = list(self.interval_tree.find_overlap(scene_ts[0], scene_ts[1] + 1))
+        possible_node_ranges = list(
+            self.interval_tree.find_overlap(scene_ts[0], scene_ts[1] + 1))
         if not possible_node_ranges:
             return Node(node_type=self.type,
                         node_id='EMPTY',
@@ -180,7 +205,8 @@ class MultiNode(Node):
                 node data before data is available. paddingu: Number of timesteps in scene range which are not
                 available in node data after data is available.
         """
-        possible_node_ranges = list(self.interval_tree.find_overlap(scene_ts[0], scene_ts[1] + 1))
+        possible_node_ranges = list(
+            self.interval_tree.find_overlap(scene_ts[0], scene_ts[1] + 1))
         if not possible_node_ranges:
             return None, None, None, None
 
@@ -189,7 +215,9 @@ class MultiNode(Node):
 
         paddingl = (node.first_timestep - scene_ts[0]).clip(0)
         paddingu = (scene_ts[1] - node.last_timestep).clip(0)
-        ts = np.array(scene_ts).clip(min=node.first_timestep, max=node.last_timestep) - node.first_timestep
+        ts = np.array(scene_ts).clip(
+            min=node.first_timestep,
+            max=node.last_timestep) - node.first_timestep
         return node, ts, paddingl, paddingu
 
     def get(self, tr_scene, state, padding=np.nan) -> np.ndarray:
@@ -199,11 +227,13 @@ class MultiNode(Node):
 
         node, tr, paddingl, paddingu = self.scene_ts_to_node_ts(tr_scene)
         if node is None:
-            state_length = sum([len(entity_dims) for entity_dims in state.values()])
+            state_length = sum([len(entity_dims)
+                                for entity_dims in state.values()])
             return np.full((length, state_length), fill_value=padding)
 
         data_array = node.data[tr[0]:tr[1] + 1, state]
-        padded_data_array = np.full((length, data_array.shape[1]), fill_value=padding)
+        padded_data_array = np.full(
+            (length, data_array.shape[1]), fill_value=padding)
         padded_data_array[paddingl:length - paddingu] = data_array
         return padded_data_array
 
@@ -212,10 +242,12 @@ class MultiNode(Node):
         # full scene-sized output array.
         assert tr_scene.size == 2 and tr_scene[0] == 0 and self.last_timestep <= tr_scene[1]
         length = tr_scene[1] - tr_scene[0] + 1  # tr is inclusive
-        state_length = sum([len(entity_dims) for entity_dims in state.values()])
+        state_length = sum([len(entity_dims)
+                            for entity_dims in state.values()])
         padded_data_array = np.full((length, state_length), fill_value=padding)
         for node in self.nodes_list:
-            padded_data_array[node.first_timestep:node.last_timestep + 1] = node.data[:, state]
+            padded_data_array[node.first_timestep:node.last_timestep +
+                              1] = node.data[:, state]
 
         return padded_data_array
 

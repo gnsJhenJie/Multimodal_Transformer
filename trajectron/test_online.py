@@ -43,13 +43,15 @@ def create_online_env(env, hyperparams, scene_idx, init_timestep):
                          map=test_scene.map,
                          dt=test_scene.dt)
     online_scene.nodes = test_scene.get_nodes_clipped_at_time(
-        timesteps=np.arange(init_timestep - hyperparams['maximum_history_length'],
-                            init_timestep + 1),
+        timesteps=np.arange(
+            init_timestep - hyperparams['maximum_history_length'],
+            init_timestep + 1),
         state=hyperparams['state'])
     online_scene.robot = test_scene.robot
-    online_scene.calculate_scene_graph(attention_radius=env.attention_radius,
-                                       edge_addition_filter=hyperparams['edge_addition_filter'],
-                                       edge_removal_filter=hyperparams['edge_removal_filter'])
+    online_scene.calculate_scene_graph(
+        attention_radius=env.attention_radius,
+        edge_addition_filter=hyperparams['edge_addition_filter'],
+        edge_removal_filter=hyperparams['edge_removal_filter'])
 
     return Environment(node_type_list=env.node_type_list,
                        standardization=env.standardization,
@@ -70,8 +72,10 @@ def get_maps_for_input(input_dict, scene, hyperparams):
             me_hyp = hyperparams['map_encoder'][node.type]
             if 'heading_state_index' in me_hyp:
                 heading_state_index = me_hyp['heading_state_index']
-                # We have to rotate the map in the opposit direction of the agent to match them
-                if type(heading_state_index) is list:  # infer from velocity or heading vector
+                # We have to rotate the map in the opposit direction of the
+                # agent to match them
+                if isinstance(heading_state_index,
+                              list):  # infer from velocity or heading vector
                     heading_angle = -np.arctan2(x[-1, heading_state_index[1]],
                                                 x[-1, heading_state_index[0]]) * 180 / np.pi
                 else:
@@ -95,10 +99,11 @@ def get_maps_for_input(input_dict, scene, hyperparams):
     else:
         heading_angles = torch.Tensor(heading_angles)
 
-    maps = scene_maps[0].get_cropped_maps_from_scene_map_batch(scene_maps,
-                                                               scene_pts=torch.Tensor(scene_pts),
-                                                               patch_size=patch_sizes[0],
-                                                               rotation=heading_angles)
+    maps = scene_maps[0].get_cropped_maps_from_scene_map_batch(
+        scene_maps,
+        scene_pts=torch.Tensor(scene_pts),
+        patch_size=patch_sizes[0],
+        rotation=heading_angles)
 
     maps_dict = {node: maps[[i]] for i, node in enumerate(nodes_with_maps)}
     return maps_dict
@@ -137,22 +142,26 @@ def main():
         eval_env = dill.load(f, encoding='latin1')
 
     if eval_env.robot_type is None and hyperparams['incl_robot_node']:
-        eval_env.robot_type = eval_env.NodeType[0]  # TODO: Make more general, allow the user to specify?
+        # TODO: Make more general, allow the user to specify?
+        eval_env.robot_type = eval_env.NodeType[0]
         for scene in eval_env.scenes:
             scene.add_robot_from_nodes(eval_env.robot_type)
 
     print('Loaded data from %s' % (eval_data_path,))
 
     # Creating a dummy environment with a single scene that contains information about the world.
-    # When using this code, feel free to use whichever scene index or initial timestep you wish.
+    # When using this code, feel free to use whichever scene index or initial
+    # timestep you wish.
     scene_idx = 0
 
     # You need to have at least acceleration, so you want 2 timesteps of prior data, e.g. [0, 1],
-    # so that you can immediately start incremental inference from the 3rd timestep onwards.
+    # so that you can immediately start incremental inference from the 3rd
+    # timestep onwards.
     init_timestep = 1
 
     eval_scene = eval_env.scenes[scene_idx]
-    online_env = create_online_env(eval_env, hyperparams, scene_idx, init_timestep)
+    online_env = create_online_env(
+        eval_env, hyperparams, scene_idx, init_timestep)
 
     model_registrar = ModelRegistrar(model_dir, args.eval_device)
     model_registrar.load_models(iter_num=12)
@@ -169,7 +178,8 @@ def main():
     trajectron.set_environment(online_env, init_timestep)
 
     for timestep in range(init_timestep + 1, eval_scene.timesteps):
-        input_dict = eval_scene.get_clipped_input_dict(timestep, hyperparams['state'])
+        input_dict = eval_scene.get_clipped_input_dict(
+            timestep, hyperparams['state'])
 
         maps = None
         if hyperparams['use_map_encoding']:
@@ -181,7 +191,8 @@ def main():
                                                                       timestep + hyperparams['prediction_horizon']]),
                                                             hyperparams['state'][eval_scene.robot.type],
                                                             padding=0.0)
-            robot_present_and_future = np.stack([robot_present_and_future, robot_present_and_future], axis=0)
+            robot_present_and_future = np.stack(
+                [robot_present_and_future, robot_present_and_future], axis=0)
             # robot_present_and_future += adjustment
 
         start = time.time()
@@ -192,9 +203,11 @@ def main():
                                                       robot_present_and_future=robot_present_and_future,
                                                       full_dist=True)
         end = time.time()
-        print("t=%d: took %.2f s (= %.2f Hz) w/ %d nodes and %d edges" % (timestep, end - start,
-                                                                          1. / (end - start), len(trajectron.nodes),
-                                                                          trajectron.scene_graph.get_num_edges()))
+        print("t=%d: took %.2f s (= %.2f Hz) w/ %d nodes and %d edges" %
+              (timestep, end -
+               start, 1. /
+               (end -
+                start), len(trajectron.nodes), trajectron.scene_graph.get_num_edges()))
 
         detailed_preds_dict = dict()
         for node in eval_scene.nodes:
@@ -230,7 +243,8 @@ def main():
                                 zorder=3)
             ax.add_artist(circle)
 
-        fig.savefig(os.path.join(output_save_dir, f'pred_{timestep}.pdf'), dpi=300)
+        fig.savefig(os.path.join(output_save_dir,
+                                 f'pred_{timestep}.pdf'), dpi=300)
         plt.close(fig)
 
 

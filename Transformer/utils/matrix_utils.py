@@ -20,7 +20,7 @@ def block_diag(m):
     :type m: torch.tensor, list
     :rtype: torch.tensor
     """
-    if type(m) is list:
+    if isinstance(m, list):
         m = torch.cat([m1.unsqueeze(-3) for m1 in m], -3)
 
     d = m.dim()
@@ -37,5 +37,6 @@ def tile(a, dim, n_tile, device='cpu'):
     repeat_idx = [1] * a.dim()
     repeat_idx[dim] = n_tile
     a = a.repeat(*(repeat_idx))
-    order_index = torch.LongTensor(np.concatenate([init_dim * np.arange(n_tile) + i for i in range(init_dim)])).to(device)
+    order_index = torch.LongTensor(np.concatenate(
+        [init_dim * np.arange(n_tile) + i for i in range(init_dim)])).to(device)
     return torch.index_select(a, dim, order_index)

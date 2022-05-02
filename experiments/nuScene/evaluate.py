@@ -1,3 +1,5 @@
+from scipy.interpolate import RectBivariateSpline
+from tqdm import tqdm
 import sys
 import os
 import dill
@@ -9,12 +11,10 @@ import pandas as pd
 
 sys.path.append("../../Transformer")
 
-from tqdm import tqdm
-from model.model_registrar import ModelRegistrar
-from model.trajectron import Trajectron
-import evaluation
 import utils
-from scipy.interpolate import RectBivariateSpline
+import evaluation
+from model.trajectron import Trajectron
+from model.model_registrar import ModelRegistrar
 
 seed = 0
 np.random.seed(seed)
@@ -24,13 +24,16 @@ if torch.cuda.is_available():
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", help="model full path", type=str)
-parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=int)
+parser.add_argument(
+    "--checkpoint", help="model checkpoint to evaluate", type=int)
 parser.add_argument("--data", help="full path to data file", type=str)
 parser.add_argument("--output_path", help="path to output csv file", type=str)
 parser.add_argument("--output_tag", help="name tag for output file", type=str)
 parser.add_argument("--node_type", help="node type to evaluate", type=str)
-parser.add_argument("--prediction_horizon", nargs='+', help="prediction horizon", type=int, default=None)
+parser.add_argument("--prediction_horizon", nargs='+',
+                    help="prediction horizon", type=int, default=None)
 args = parser.parse_args()
+
 
 def compute_road_violations(predicted_trajs, map, channel):
     obs_map = 1 - map.data[..., channel, :, :] / 255
@@ -78,7 +81,7 @@ if __name__ == "__main__":
                                  ] = float(attention_radius)
 
     scenes = env.scenes
-    
+
     for ph in args.prediction_horizon:
         print(f"Prediction Horizon: {ph}")
         max_hl = hyperparams['maximum_history_length']
@@ -93,29 +96,20 @@ if __name__ == "__main__":
                 timesteps = np.arange(scene.timesteps)
 
                 # change to our prediction result
-                history_pred, lane_pred = eval_stg.predict(scene,
-                                                           timesteps,
-                                                           ph,
-                                                           min_history_timesteps=hyperparams['minimum_history_length'],
-                                                           min_future_timesteps=ph)
+                history_pred, lane_pred = eval_stg.predict(
+                    scene, timesteps, ph, min_history_timesteps=hyperparams['minimum_history_length'], min_future_timesteps=ph)
 
                 if not history_pred and not lane_pred:
                     continue
 
                 eval_road_viols_batch = []
-                
+
                 if hyperparams['lane_cnn_encoding']:
-                    lane_prediction_dict, _, _ = utils.lane_prediction_output_to_trajectories(lane_pred,
-                                                                                        scene.dt,
-                                                                                        max_hl,
-                                                                                        ph,
-                                                                                        prune_ph_to_future=False)
+                    lane_prediction_dict, _, _ = utils.lane_prediction_output_to_trajectories(
+                        lane_pred, scene.dt, max_hl, ph, prune_ph_to_future=False)
                 else:
-                    history_prediction_dict, _, _ = utils.prediction_output_to_trajectories(history_pred,
-                                                                                            scene.dt,
-                                                                                            max_hl,
-                                                                                            ph,
-                                                                                            prune_ph_to_future=False)
+                    history_prediction_dict, _, _ = utils.prediction_output_to_trajectories(
+                        history_pred, scene.dt, max_hl, ph, prune_ph_to_future=False)
 
                     # check for multiple output offroad rate
                     # for t in history_prediction_dict.keys():
@@ -134,34 +128,37 @@ if __name__ == "__main__":
                     #         eval_road_viols_batch.append(viols)
                     # eval_road_viols = np.hstack(
                     #     (eval_road_viols, eval_road_viols_batch))
-                    if hyperparams['lane_cnn_encoding']:
-                        batch_error_dict = evaluation.lane_compute_batch_statistics(lane_pred,
-                                                                            scene.dt,
-                                                                            max_hl=max_hl,
-                                                                            ph=ph,
-                                                                            node_type_enum=env.NodeType,
-                                                                            map=None,
-                                                                            prune_ph_to_future=False)
-                    else:
-                        batch_error_dict = evaluation.compute_batch_statistics(history_pred,
-                                                                            scene.dt,
-                                                                            max_hl=max_hl,
-                                                                            ph=ph,
-                                                                            node_type_enum=env.NodeType,
-                                                                            map=None,
-                                                                            prune_ph_to_future=False)
                     
+                    if hyperparams['lane_cnn_encoding']:
+                        batch_error_dict = evaluation.lane_compute_batch_statistics(
+                            lane_pred,
+                            scene.dt,
+                            max_hl=max_hl,
+                            ph=ph,
+                            node_type_enum=env.NodeType,
+                            map=None,
+                            prune_ph_to_future=False)
+                    else:
+                        batch_error_dict = evaluation.compute_batch_statistics(
+                            history_pred,
+                            scene.dt,
+                            max_hl=max_hl,
+                            ph=ph,
+                            node_type_enum=env.NodeType,
+                            map=None,
+                            prune_ph_to_future=False)
+
                     eval_ade_batch_errors = np.hstack(
                         (eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
                     eval_fde_batch_errors = np.hstack(
                         (eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
                     # eval_kde_nll = np.hstack((eval_kde_nll, batch_error_dict[args.node_type]['kde']))
 
-        pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_full.csv'))
-        pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_full.csv'))
+        pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_full.csv'))
+        pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_full.csv'))
         # # pd.DataFrame({'value': eval_kde_nll, 'metric': 'kde', 'type': 'full'}
         # #              ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_kde_full.csv'))
-        pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_rv_full.csv'))
+        pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_rv_full.csv'))

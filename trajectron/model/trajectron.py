@@ -27,7 +27,8 @@ class Trajectron(object):
         self.state_length = dict()
         for state_type in self.state.keys():
             self.state_length[state_type] = int(
-                np.sum([len(entity_dims) for entity_dims in self.state[state_type].values()])
+                np.sum([len(entity_dims)
+                        for entity_dims in self.state[state_type].values()])
             )
         self.pred_state = self.hyperparams['pred_state']
 
@@ -40,13 +41,14 @@ class Trajectron(object):
         for node_type in env.NodeType:
             # Only add a Model for NodeTypes we want to predict
             if node_type in self.pred_state.keys():
-                self.node_models_dict[node_type] = MultimodalGenerativeCVAE(env,
-                                                                            node_type,
-                                                                            self.model_registrar,
-                                                                            self.hyperparams,
-                                                                            self.device,
-                                                                            edge_types,
-                                                                            log_writer=self.log_writer)
+                self.node_models_dict[node_type] = MultimodalGenerativeCVAE(
+                    env,
+                    node_type,
+                    self.model_registrar,
+                    self.hyperparams,
+                    self.device,
+                    edge_types,
+                    log_writer=self.log_writer)
 
     def set_curr_iter(self, curr_iter):
         self.curr_iter = curr_iter
@@ -78,7 +80,7 @@ class Trajectron(object):
         y_st_t = y_st_t.to(self.device)
         if robot_traj_st_t is not None:
             robot_traj_st_t = robot_traj_st_t.to(self.device)
-        if type(map) == torch.Tensor:
+        if isinstance(map, torch.Tensor):
             map = map.to(self.device)
 
         # Run forward pass
@@ -89,7 +91,8 @@ class Trajectron(object):
                                 labels=y,
                                 labels_st=y_st_t,
                                 neighbors=restore(neighbors_data_st),
-                                neighbors_edge_value=restore(neighbors_edge_value),
+                                neighbors_edge_value=restore(
+                                    neighbors_edge_value),
                                 robot=robot_traj_st_t,
                                 map=map,
                                 prediction_horizon=self.ph)
@@ -110,7 +113,7 @@ class Trajectron(object):
         y_st_t = y_st_t.to(self.device)
         if robot_traj_st_t is not None:
             robot_traj_st_t = robot_traj_st_t.to(self.device)
-        if type(map) == torch.Tensor:
+        if isinstance(map, torch.Tensor):
             map = map.to(self.device)
 
         # Run forward pass
@@ -121,7 +124,8 @@ class Trajectron(object):
                               labels=y,
                               labels_st=y_st_t,
                               neighbors=restore(neighbors_data_st),
-                              neighbors_edge_value=restore(neighbors_edge_value),
+                              neighbors_edge_value=restore(
+                                  neighbors_edge_value),
                               robot=robot_traj_st_t,
                               map=map,
                               prediction_horizon=self.ph)
@@ -148,10 +152,19 @@ class Trajectron(object):
             model = self.node_models_dict[node_type]
 
             # Get Input data for node type and given timesteps
-            batch = get_timesteps_data(env=self.env, scene=scene, t=timesteps, node_type=node_type, state=self.state,
-                                       pred_state=self.pred_state, edge_types=model.edge_types,
-                                       min_ht=min_history_timesteps, max_ht=self.max_ht, min_ft=min_future_timesteps,
-                                       max_ft=min_future_timesteps, hyperparams=self.hyperparams)
+            batch = get_timesteps_data(
+                env=self.env,
+                scene=scene,
+                t=timesteps,
+                node_type=node_type,
+                state=self.state,
+                pred_state=self.pred_state,
+                edge_types=model.edge_types,
+                min_ht=min_history_timesteps,
+                max_ht=self.max_ht,
+                min_ft=min_future_timesteps,
+                max_ft=min_future_timesteps,
+                hyperparams=self.hyperparams)
             # There are no nodes of type present for timestep
             if batch is None:
                 continue
@@ -166,23 +179,24 @@ class Trajectron(object):
             x_st_t = x_st_t.to(self.device)
             if robot_traj_st_t is not None:
                 robot_traj_st_t = robot_traj_st_t.to(self.device)
-            if type(map) == torch.Tensor:
+            if isinstance(map, torch.Tensor):
                 map = map.to(self.device)
 
             # Run forward pass
-            predictions = model.predict(inputs=x,
-                                        inputs_st=x_st_t,
-                                        first_history_indices=first_history_index,
-                                        neighbors=neighbors_data_st,
-                                        neighbors_edge_value=neighbors_edge_value,
-                                        robot=robot_traj_st_t,
-                                        map=map,
-                                        prediction_horizon=ph,
-                                        num_samples=num_samples,
-                                        z_mode=z_mode,
-                                        gmm_mode=gmm_mode,
-                                        full_dist=full_dist,
-                                        all_z_sep=all_z_sep)
+            predictions = model.predict(
+                inputs=x,
+                inputs_st=x_st_t,
+                first_history_indices=first_history_index,
+                neighbors=neighbors_data_st,
+                neighbors_edge_value=neighbors_edge_value,
+                robot=robot_traj_st_t,
+                map=map,
+                prediction_horizon=ph,
+                num_samples=num_samples,
+                z_mode=z_mode,
+                gmm_mode=gmm_mode,
+                full_dist=full_dist,
+                all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
 
@@ -190,6 +204,7 @@ class Trajectron(object):
             for i, ts in enumerate(timesteps_o):
                 if ts not in predictions_dict.keys():
                     predictions_dict[ts] = dict()
-                predictions_dict[ts][nodes[i]] = np.transpose(predictions_np[:, [i]], (1, 0, 2, 3))
+                predictions_dict[ts][nodes[i]] = np.transpose(
+                    predictions_np[:, [i]], (1, 0, 2, 3))
 
         return predictions_dict

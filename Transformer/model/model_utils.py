@@ -7,6 +7,7 @@ import numpy as np
 import math
 from scipy.interpolate import RectBivariateSpline
 
+
 class ModeKeys(Enum):
     TRAIN = 1
     EVAL = 2
@@ -15,7 +16,8 @@ class ModeKeys(Enum):
 
 def cyclical_lr(stepsize, min_lr=3e-4, max_lr=3e-3, decay=1.):
     # Lambda function to calculate the LR
-    def lr_lambda(it): return min_lr + (max_lr - min_lr) * \
+    def lr_lambda(it):
+        return min_lr + (max_lr - min_lr) * \
         relative(it, stepsize) * decay**it
 
     # Additional function to see where on the cycle we are
@@ -36,7 +38,8 @@ def exp_anneal(anneal_kws):
     start = torch.tensor(anneal_kws['start'], device=device)
     finish = torch.tensor(anneal_kws['finish'], device=device)
     rate = torch.tensor(anneal_kws['rate'], device=device)
-    return lambda step: finish - (finish - start)*torch.pow(rate, torch.tensor(step, dtype=torch.float, device=device))
+    return lambda step: finish - \
+        (finish - start) * torch.pow(rate, torch.tensor(step, dtype=torch.float, device=device))
 
 
 def sigmoid_anneal(anneal_kws):
@@ -47,7 +50,8 @@ def sigmoid_anneal(anneal_kws):
         anneal_kws['center_step'], device=device, dtype=torch.float)
     steps_lo_to_hi = torch.tensor(
         anneal_kws['steps_lo_to_hi'], device=device, dtype=torch.float)
-    return lambda step: start + (finish - start)*torch.sigmoid((torch.tensor(float(step), device=device) - center_step) * (1./steps_lo_to_hi))
+    return lambda step: start + (finish - start) * torch.sigmoid(
+        (torch.tensor(float(step), device=device) - center_step) * (1. / steps_lo_to_hi))
 
 
 class CustomLR(torch.optim.lr_scheduler.LambdaLR):
@@ -64,7 +68,13 @@ def mutual_inf_mc(x_dist):
     H_y = dist(probs=x_dist.probs.mean(dim=0)).entropy()
     return (H_y - x_dist.entropy().mean(dim=0)).sum()
 
-def run_lstm_on_variable_length_seqs(lstm_module, original_seqs, lower_indices=None, upper_indices=None, total_length=None):
+
+def run_lstm_on_variable_length_seqs(
+        lstm_module,
+        original_seqs,
+        lower_indices=None,
+        upper_indices=None,
+        total_length=None):
     bs, tf = original_seqs.shape[:2]
     if lower_indices is None:
         lower_indices = torch.zeros(bs, dtype=torch.int)
@@ -134,10 +144,12 @@ def generate_square_subsequent_mask(sz, device):
         '-inf')).masked_fill(mask == 1, float(0.0))
     return mask
 
+
 def generate_mask(src):
     # we usually padding sequence because of different length of input
     # we need to mask the nan element in sequence
     return torch.isnan(src)[:, :, 1]
+
 
 def L2_norm(y_pred, labels):
     """
@@ -145,41 +157,50 @@ def L2_norm(y_pred, labels):
     :param: labels  [bs,timestep,2]
     :return the distance error of each lane_output [bs, lane_num]
     """
-    return torch.norm(y_pred-labels, p=2, dim=-1)
+    return torch.norm(y_pred - labels, p=2, dim=-1)
 
-def obs_violation_rate(predicted_trajs, groundtruth_trajs, map, heading_angle, channel, device):
-    
+
+def obs_violation_rate(
+        predicted_trajs,
+        groundtruth_trajs,
+        map,
+        heading_angle,
+        channel,
+        device):
     '''
     calc obstacle hit rate and using not xor to calc the violation of predict trajectories
     '''
-    obs_map = torch.tensor(map.data[..., channel, :, :] / 255, dtype=torch.float)
+    obs_map = torch.tensor(
+        map.data[..., channel, :, :] / 255, dtype=torch.float)
     max_x, max_y = obs_map.size()
-    viol_point = torch.tensor([],device=device)
+    viol_point = torch.tensor([], device=device)
     for i in range(predicted_trajs.size()[-2]):
         # homography
-        px = torch.round(predicted_trajs[:, i, 0]*3).type(torch.LongTensor)
-        py = torch.round(predicted_trajs[:, i, 1]*3).type(torch.LongTensor)
-        gx = torch.round(groundtruth_trajs[:, i, 0]*3).type(torch.LongTensor)
-        gy = torch.round(groundtruth_trajs[:, i, 1]*3).type(torch.LongTensor)
+        px = torch.round(predicted_trajs[:, i, 0] * 3).type(torch.LongTensor)
+        py = torch.round(predicted_trajs[:, i, 1] * 3).type(torch.LongTensor)
+        gx = torch.round(groundtruth_trajs[:, i, 0] * 3).type(torch.LongTensor)
+        gy = torch.round(groundtruth_trajs[:, i, 1] * 3).type(torch.LongTensor)
         if px > max_x or py > max_y:
-            viol_point = torch.cat([viol_point,torch.ones(1,device=device)])
+            viol_point = torch.cat([viol_point, torch.ones(1, device=device)])
             continue
         elif gx > max_x or gy > max_y:
             print('wtf')
         if obs_map[px, py] == obs_map[gx, gy]:
-            viol_point = torch.cat([viol_point,torch.zeros(1,device=device)])
+            viol_point = torch.cat([viol_point, torch.zeros(1, device=device)])
         else:
-            viol_point = torch.cat([viol_point,torch.ones(1,device=device)])
-    viol_rate = torch.sum(viol_point)/ viol_point.size()[0]
+            viol_point = torch.cat([viol_point, torch.ones(1, device=device)])
+    viol_rate = torch.sum(viol_point) / viol_point.size()[0]
 
     return viol_rate
 
+
 def classification_loss(lane_label, lane_attn):
     # lane_label [256, prediction_horizon, 3] lane_attn [256, prediction_horizon, 3]
-    # L_classification > 0 cross entropy p_i*log(p_hat_i), => p_hat_i using softmax
+    # L_classification > 0 cross entropy p_i*log(p_hat_i), => p_hat_i using
+    # softmax
     cls_loss = torch.mul(lane_label, torch.log(lane_attn))
     cls_loss = torch.sum(cls_loss)
-    cls_loss = (-1)*cls_loss
+    cls_loss = (-1) * cls_loss
 
     return cls_loss
 

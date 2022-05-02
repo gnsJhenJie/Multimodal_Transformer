@@ -68,7 +68,8 @@ class RingBuffer(Sequence):
     def append(self, value):
         if self.is_full:
             if not self._allow_overwrite:
-                raise IndexError('append to a full RingBuffer with overwrite disabled')
+                raise IndexError(
+                    'append to a full RingBuffer with overwrite disabled')
             elif not len(self):
                 return
             else:
@@ -81,7 +82,8 @@ class RingBuffer(Sequence):
     def appendleft(self, value):
         if self.is_full:
             if not self._allow_overwrite:
-                raise IndexError('append to a full RingBuffer with overwrite disabled')
+                raise IndexError(
+                    'append to a full RingBuffer with overwrite disabled')
             elif not len(self):
                 return
             else:
@@ -111,7 +113,8 @@ class RingBuffer(Sequence):
         lv = len(values)
         if len(self) + lv > self._capacity:
             if not self._allow_overwrite:
-                raise IndexError('extend a RingBuffer such that it would overflow, with overwrite disabled')
+                raise IndexError(
+                    'extend a RingBuffer such that it would overflow, with overwrite disabled')
             elif not len(self):
                 return
         if lv >= self._capacity:
@@ -128,14 +131,16 @@ class RingBuffer(Sequence):
         self._arr[sl2] = values[sl1.stop - sl1.start:]
         self._right_index += lv
 
-        self._left_index = max(self._left_index, self._right_index - self._capacity)
+        self._left_index = max(
+            self._left_index, self._right_index - self._capacity)
         self._fix_indices()
 
     def extendleft(self, values):
         lv = len(values)
         if len(self) + lv > self._capacity:
             if not self._allow_overwrite:
-                raise IndexError('extend a RingBuffer such that it would overflow, with overwrite disabled')
+                raise IndexError(
+                    'extend a RingBuffer such that it would overflow, with overwrite disabled')
             elif not len(self):
                 return
         if lv >= self._capacity:
@@ -153,14 +158,16 @@ class RingBuffer(Sequence):
         self._arr[sl1] = values[:sl1.stop - sl1.start]
         self._arr[sl2] = values[sl1.stop - sl1.start:]
 
-        self._right_index = min(self._right_index, self._left_index + self._capacity)
+        self._right_index = min(
+            self._right_index, self._left_index + self._capacity)
 
     # implement Sequence methods
     def __len__(self):
         return self._right_index - self._left_index
 
     def __getitem__(self, item):
-        # handle simple (b[1]) and basic (b[np.array([1, 2, 3])]) fancy indexing specially
+        # handle simple (b[1]) and basic (b[np.array([1, 2, 3])]) fancy
+        # indexing specially
         if not isinstance(item, tuple):
             item_arr = np.asarray(item)
             if issubclass(item_arr.dtype.type, np.integer):
@@ -211,25 +218,29 @@ class DoubleHeaderNumpyArray(object):
         for h2 in self.tree_header_lookup[h1]:
             data_integer_indices.append(self.tree_header_lookup[h1][h2])
             h2_list.append(h2)
-        return SingleHeaderNumpyArray(self.data[rows, data_integer_indices], h2_list)
+        return SingleHeaderNumpyArray(
+            self.data[rows, data_integer_indices], h2_list)
 
     def __getitem__(self, item):
         rows, columns = item
         data_integer_indices = list()
-        if type(columns) is dict:
+        if isinstance(columns, dict):
             for h1, h2s in columns.items():
                 for h2 in h2s:
-                    data_integer_indices.append(self.double_header_lookup[(h1, h2)])
+                    data_integer_indices.append(
+                        self.double_header_lookup[(h1, h2)])
             return self.data[rows, data_integer_indices]
-        elif type(columns) is list:
+        elif isinstance(columns, list):
             for column in columns:
-                assert type(column) is tuple, "If Index is list it hast to be list of double header tuples."
+                assert isinstance(
+                    column, tuple), "If Index is list it hast to be list of double header tuples."
                 data_integer_indices.append(self.double_header_lookup[column])
             return self.data[rows, data_integer_indices]
-        elif type(columns) is tuple:
+        elif isinstance(columns, tuple):
             return self.data[rows, self.double_header_lookup[columns]]
         else:
-            assert type(item) is str, "Index must be str, list of tuples or dict of tree structure."
+            assert isinstance(
+                item, str), "Index must be str, list of tuples or dict of tree structure."
             return self.get_single_header_array(item, rows=rows)
 
     def __getattr__(self, item):
@@ -253,7 +264,7 @@ class SingleHeaderNumpyArray(object):
     def __getitem__(self, item):
         rows, columns = item
         data_integer_indices = list()
-        if type(columns) is list or type(columns) is tuple:
+        if isinstance(columns, list) or isinstance(columns, tuple):
             for column in columns:
                 data_integer_indices.append(self.header_lookup[column])
         else:

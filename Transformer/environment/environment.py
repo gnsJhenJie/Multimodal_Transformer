@@ -5,7 +5,13 @@ from .node_type import NodeTypeEnum
 
 
 class Environment(object):
-    def __init__(self, node_type_list, standardization, scenes=None, attention_radius=None, robot_type=None):
+    def __init__(
+            self,
+            node_type_list,
+            standardization,
+            scenes=None,
+            attention_radius=None,
+            robot_type=None):
         self.scenes = scenes
         self.node_type_list = node_type_list
         self.attention_radius = attention_radius
@@ -29,15 +35,17 @@ class Environment(object):
         standardize_std_list = list()
         for entity, dims in state.items():
             for dim in dims:
-                standardize_mean_list.append(self.standardization[node_type][entity][dim]['mean'])
-                standardize_std_list.append(self.standardization[node_type][entity][dim]['std'])
+                standardize_mean_list.append(
+                    self.standardization[node_type][entity][dim]['mean'])
+                standardize_std_list.append(
+                    self.standardization[node_type][entity][dim]['std'])
         standardize_mean = np.stack(standardize_mean_list)
         standardize_std = np.stack(standardize_std_list)
 
-        self.standardize_param_memo[memo_key] = (standardize_mean, standardize_std)
+        self.standardize_param_memo[memo_key] = (
+            standardize_mean, standardize_std)
         return standardize_mean, standardize_std
 
-    
     def standardize(self, array, state, node_type, mean=None, std=None):
         if mean is None and std is None:
             mean, std = self.get_standardize_params(state, node_type)
@@ -64,7 +72,8 @@ class Environment(object):
     @property
     def scenes_resample_prop(self):
         if self._scenes_resample_prop is None:
-            self._scenes_resample_prop = np.array([scene.resample_prob for scene in self.scenes])
-            self._scenes_resample_prop = self._scenes_resample_prop / np.sum(self._scenes_resample_prop)
+            self._scenes_resample_prop = np.array(
+                [scene.resample_prob for scene in self.scenes])
+            self._scenes_resample_prop = self._scenes_resample_prop / \
+                np.sum(self._scenes_resample_prop)
         return self._scenes_resample_prop
-

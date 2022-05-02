@@ -5,7 +5,15 @@ from .node import MultiNode
 
 
 class Scene(object):
-    def __init__(self, timesteps, map=None, dt=1, name="", frequency_multiplier=1, aug_func=None,  non_aug_scene=None):
+    def __init__(
+            self,
+            timesteps,
+            map=None,
+            dt=1,
+            name="",
+            frequency_multiplier=1,
+            aug_func=None,
+            non_aug_scene=None):
         self.map = map
         self.timesteps = timesteps
         self.dt = dt
@@ -26,8 +34,10 @@ class Scene(object):
 
     def add_robot_from_nodes(self, robot_type):
         nodes_list = [node for node in self.nodes if node.type == robot_type]
-        non_overlapping_nodes = MultiNode.find_non_overlapping_nodes(nodes_list, min_timesteps=3)
-        self.robot = MultiNode(robot_type, 'ROBOT', non_overlapping_nodes, is_robot=True)
+        non_overlapping_nodes = MultiNode.find_non_overlapping_nodes(
+            nodes_list, min_timesteps=3)
+        self.robot = MultiNode(robot_type, 'ROBOT',
+                               non_overlapping_nodes, is_robot=True)
 
         for node in non_overlapping_nodes:
             self.nodes.remove(node)
@@ -35,8 +45,8 @@ class Scene(object):
 
     def get_clipped_pos_dict(self, timestep, state):
         pos_dict = dict()
-        existing_nodes = self.get_nodes_clipped_at_time(timesteps=np.array([timestep]),
-                                                        state=state)
+        existing_nodes = self.get_nodes_clipped_at_time(
+            timesteps=np.array([timestep]), state=state)
         tr_scene = np.array([timestep, timestep])
         for node in existing_nodes:
             pos_dict[node] = node.get(tr_scene, {'position': ['x', 'y']})
@@ -59,28 +69,28 @@ class Scene(object):
         :return: Scene Graph for given timestep.
         """
         if self.temporal_scene_graph is None:
-            timestep_range = np.array([timestep - len(edge_removal_filter), timestep])
+            timestep_range = np.array(
+                [timestep - len(edge_removal_filter), timestep])
             node_pos_dict = dict()
             present_nodes = self.present_nodes(np.array([timestep]))
 
             for node in present_nodes[timestep]:
-                node_pos_dict[node] = np.squeeze(node.get(timestep_range, {'position': ['x', 'y']}))
-            tsg = TemporalSceneGraph.create_from_temp_scene_dict(node_pos_dict,
-                                                                 attention_radius,
-                                                                 duration=(len(edge_removal_filter) + 1),
-                                                                 edge_addition_filter=edge_addition_filter,
-                                                                 edge_removal_filter=edge_removal_filter
-                                                                 )
+                node_pos_dict[node] = np.squeeze(
+                    node.get(timestep_range, {'position': ['x', 'y']}))
+            tsg = TemporalSceneGraph.create_from_temp_scene_dict(
+                node_pos_dict,
+                attention_radius,
+                duration=(
+                    len(edge_removal_filter) + 1),
+                edge_addition_filter=edge_addition_filter,
+                edge_removal_filter=edge_removal_filter)
 
             return tsg.to_scene_graph(t=len(edge_removal_filter),
                                       t_hist=len(edge_removal_filter),
                                       t_fut=len(edge_addition_filter))
         else:
-            return self.temporal_scene_graph.to_scene_graph(timestep,
-                                                            len(edge_removal_filter),
-                                                            len(edge_addition_filter))
-
-    
+            return self.temporal_scene_graph.to_scene_graph(
+                timestep, len(edge_removal_filter), len(edge_addition_filter))
 
     def duration(self):
         """
@@ -115,14 +125,17 @@ class Scene(object):
             if type is None or node.type == type:
                 lower_bound = timesteps - min_history_timesteps
                 upper_bound = timesteps + min_future_timesteps
-                mask = (node.first_timestep <= lower_bound) & (upper_bound <= node.last_timestep)
+                mask = (node.first_timestep <= lower_bound) & (
+                    upper_bound <= node.last_timestep)
                 if mask.any():
                     timestep_indices_present = np.nonzero(mask)[0]
                     for timestep_index_present in timestep_indices_present:
                         if timesteps[timestep_index_present] in present_nodes.keys():
-                            present_nodes[timesteps[timestep_index_present]].append(node)
+                            present_nodes[timesteps[timestep_index_present]].append(
+                                node)
                         else:
-                            present_nodes[timesteps[timestep_index_present]] = [node]
+                            present_nodes[timesteps[timestep_index_present]] = [
+                                node]
 
         return present_nodes
 
@@ -137,7 +150,8 @@ class Scene(object):
         tr_scene = np.array([timesteps.min(), timesteps.max()])
         for node in all_nodes:
             if isinstance(node, MultiNode):
-                copied_node = copy.deepcopy(node.get_node_at_timesteps(tr_scene))
+                copied_node = copy.deepcopy(
+                    node.get_node_at_timesteps(tr_scene))
                 copied_node.id = self.robot.id
             else:
                 copied_node = copy.deepcopy(node)
@@ -150,7 +164,10 @@ class Scene(object):
 
         return clipped_nodes
 
-    def sample_timesteps(self, batch_size, min_future_timesteps=0) -> np.ndarray:
+    def sample_timesteps(
+            self,
+            batch_size,
+            min_future_timesteps=0) -> np.ndarray:
         """
         Sample a batch size of possible timesteps for the scene.
 
@@ -160,7 +177,13 @@ class Scene(object):
         """
         if batch_size > self.timesteps:
             batch_size = self.timesteps
-        return np.random.choice(np.arange(0, self.timesteps-min_future_timesteps), size=batch_size, replace=False)
+        return np.random.choice(
+            np.arange(
+                0,
+                self.timesteps -
+                min_future_timesteps),
+            size=batch_size,
+            replace=False)
 
     def augment(self):
         if self.aug_func is not None:

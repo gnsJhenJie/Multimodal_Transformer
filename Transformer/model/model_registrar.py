@@ -3,8 +3,10 @@ import math
 import torch
 import torch.nn as nn
 
+
 def get_model_device(model):
     return next(model.parameters()).device
+
 
 class ModelRegistrar(nn.Module):
     def __init__(self, model_dir, device):
@@ -14,13 +16,14 @@ class ModelRegistrar(nn.Module):
         self.device = device
 
     def forward(self):
-        raise NotImplementedError('Although ModelRegistrar is a nn.Module, it is only to store parameters.')
+        raise NotImplementedError(
+            'Although ModelRegistrar is a nn.Module, it is only to store parameters.')
 
     def get_model(self, name, model_if_absent=None):
         # 4 cases: name in self.model_dict and model_if_absent is None         (OK)
         #          name in self.model_dict and model_if_absent is not None     (OK)
         #          name not in self.model_dict and model_if_absent is not None (OK)
-        #          name not in self.model_dict and model_if_absent is None     (NOT OK)
+        # name not in self.model_dict and model_if_absent is None     (NOT OK)
 
         if name in self.model_dict:
             return self.model_dict[name]
@@ -30,7 +33,8 @@ class ModelRegistrar(nn.Module):
             return self.model_dict[name]
 
         else:
-            raise ValueError(f'{name} was never initialized in this Registrar!')
+            raise ValueError(
+                f'{name} was never initialized in this Registrar!')
 
     def get_name_match(self, name):
         ret_model_list = nn.ModuleList()
@@ -43,7 +47,8 @@ class ModelRegistrar(nn.Module):
         ret_model_list = nn.ModuleList()
         for key in self.model_dict.keys():
             if name not in key:
-                #  and key!='VEHICLE/node_history_encoder' and key!='PEDESTRIAN/node_history_encoder'
+                # and key!='VEHICLE/node_history_encoder' and
+                # key!='PEDESTRIAN/node_history_encoder'
                 ret_model_list.append(self.model_dict[key])
         return ret_model_list
 
@@ -59,7 +64,7 @@ class ModelRegistrar(nn.Module):
 
     def load_models(self, iter_num):
         self.model_dict.clear()
-        
+
         save_path = os.path.join(self.model_dir,
                                  'model_registrar-%d.pt' % iter_num)
 
@@ -73,4 +78,3 @@ class ModelRegistrar(nn.Module):
         for name, model in self.model_dict.items():
             if get_model_device(model) != device:
                 model.to(device)
-

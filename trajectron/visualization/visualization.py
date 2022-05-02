@@ -36,18 +36,40 @@ def plot_trajectories(ax,
             if kde and predictions.shape[1] >= 50:
                 line_alpha = 0.2
                 for t in range(predictions.shape[2]):
-                    sns.kdeplot(predictions[batch_num, :, t, 0], predictions[batch_num, :, t, 1],
-                                ax=ax, shade=True, shade_lowest=False,
-                                color=np.random.choice(cmap), alpha=0.8)
+                    sns.kdeplot(predictions[batch_num,
+                                            :,
+                                            t,
+                                            0],
+                                predictions[batch_num,
+                                            :,
+                                            t,
+                                            1],
+                                ax=ax,
+                                shade=True,
+                                shade_lowest=False,
+                                color=np.random.choice(cmap),
+                                alpha=0.8)
 
-            ax.plot(predictions[batch_num, sample_num, :, 0], predictions[batch_num, sample_num, :, 1],
+            ax.plot(predictions[batch_num,
+                                sample_num,
+                                :,
+                                0],
+                    predictions[batch_num,
+                                sample_num,
+                                :,
+                                1],
                     color=cmap[node.type.value],
-                    linewidth=line_width, alpha=line_alpha)
+                    linewidth=line_width,
+                    alpha=line_alpha)
 
-            ax.plot(future[:, 0],
-                    future[:, 1],
+            ax.plot(future[:,
+                           0],
+                    future[:,
+                           1],
                     'w--',
-                    path_effects=[pe.Stroke(linewidth=edge_width, foreground='k'), pe.Normal()])
+                    path_effects=[pe.Stroke(linewidth=edge_width,
+                                            foreground='k'),
+                                  pe.Normal()])
 
             # Current Node Position
             circle = plt.Circle((history[-1, 0],
@@ -71,11 +93,8 @@ def visualize_prediction(ax,
                          map=None,
                          **kwargs):
 
-    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(prediction_output_dict,
-                                                                                      dt,
-                                                                                      max_hl,
-                                                                                      ph,
-                                                                                      map=map)
+    prediction_dict, histories_dict, futures_dict = prediction_output_to_trajectories(
+        prediction_output_dict, dt, max_hl, ph, map=map)
 
     assert(len(prediction_dict.keys()) <= 1)
     if len(prediction_dict.keys()) == 0:
@@ -88,7 +107,8 @@ def visualize_prediction(ax,
 
     if map is not None:
         ax.imshow(map.as_image(), origin='lower', alpha=0.5)
-    plot_trajectories(ax, prediction_dict, histories_dict, futures_dict, *kwargs)
+    plot_trajectories(ax, prediction_dict, histories_dict,
+                      futures_dict, *kwargs)
 
 
 def visualize_distribution(ax,
@@ -123,8 +143,13 @@ def visualize_distribution(ax,
                 # Plot an ellipse to show the Gaussian component
                 angle = np.arctan(u[1] / u[0])
                 angle = 180. * angle / np.pi  # convert to degrees
-                ell = patches.Ellipse(mean, v[0], v[1], 180. + angle, color='blue' if node.type.name == 'VEHICLE' else 'orange')
+                ell = patches.Ellipse(
+                    mean,
+                    v[0],
+                    v[1],
+                    180. + angle,
+                    color='blue' if node.type.name == 'VEHICLE' else 'orange')
                 ell.set_edgecolor(None)
                 ell.set_clip_box(ax.bbox)
-                ell.set_alpha(pi/10)
+                ell.set_alpha(pi / 10)
                 ax.add_artist(ell)

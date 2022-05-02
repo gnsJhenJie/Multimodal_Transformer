@@ -1,7 +1,14 @@
 
 
 class Dynamic(object):
-    def __init__(self, dt, dyn_limits, device, model_registrar, xz_size, node_type):
+    def __init__(
+            self,
+            dt,
+            dyn_limits,
+            device,
+            model_registrar,
+            xz_size,
+            node_type):
         self.dt = dt
         self.device = device
         self.dyn_limits = dyn_limits
@@ -25,6 +32,3 @@ class Dynamic(object):
 
     def integrate_distribution(self, dist, x):
         raise NotImplementedError
-
-    def create_graph(self, xz_size):
-        pass

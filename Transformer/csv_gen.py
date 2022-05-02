@@ -24,89 +24,89 @@ pdata = []
 
 
 with open('../experiments/processed/nuScenes_train_full.pkl', 'rb') as f:
-  train_env = dill.load(f, encoding='latin1')
-  train_scenes = train_env.scenes
-  i=0
-  #print(train_scenes)
-  first=True
-  for x in train_scenes:
-    for node in x.nodes:
-      for obj in node.data.data:
-        if(len(obj)==12):
-          if first:
-            print(node.data.header)
-            first=False
-          vdata.append(obj)
-          i+=1
-      if i>=1000:
-        break
-    if i>=1000:
-      break
-  i=0
-  first=True
-  for x in train_scenes:
-    for node in x.nodes:
-      for obj in node.data.data:
-        if(len(obj)==6):
-          if first:
-            print(node.data.header)
-            first=False
-          pdata.append(obj)
-          i+=1
-      if i>=1000:
-        break
-    if i>=1000:
-      break
+    train_env = dill.load(f, encoding='latin1')
+    train_scenes = train_env.scenes
+    i = 0
+    # print(train_scenes)
+    first = True
+    for x in train_scenes:
+        for node in x.nodes:
+            for obj in node.data.data:
+                if(len(obj) == 12):
+                    if first:
+                        print(node.data.header)
+                        first = False
+                    vdata.append(obj)
+                    i += 1
+            if i >= 1000:
+                break
+        if i >= 1000:
+            break
+    i = 0
+    first = True
+    for x in train_scenes:
+        for node in x.nodes:
+            for obj in node.data.data:
+                if(len(obj) == 6):
+                    if first:
+                        print(node.data.header)
+                        first = False
+                    pdata.append(obj)
+                    i += 1
+            if i >= 1000:
+                break
+        if i >= 1000:
+            break
 
 with open('nuScene_v.csv', 'w') as csvf:
-  writer = csv.writer(csvf)
-  writer.writerows(vdata)
+    writer = csv.writer(csvf)
+    writer.writerows(vdata)
 with open('nuScene_p.csv', 'w') as csvf:
-  writer = csv.writer(csvf)
-  writer.writerows(pdata)
-  
+    writer = csv.writer(csvf)
+    writer.writerows(pdata)
+
 vdata = []
 pdata = []
 
 
 with open('../experiments/processed/Pandaset_train_full.pkl', 'rb') as f:
-  train_env = dill.load(f, encoding='latin1')
-  train_scenes = train_env.scenes
-  i=0
-  #print(train_scenes)
-  first=True
-  for x in train_scenes:
-    for node in x.nodes:
-      for obj in node.data.data:
-        if(len(obj)==12):
-          if first:
-            print(node.data.header)
-            first=False
-          vdata.append(obj)
-          i+=1
-      if i>=1000:
-        break
-    if i>=1000:
-      break
-  i=0
-  first=True
-  for x in train_scenes:
-    for node in x.nodes:
-      for obj in node.data.data:
-        if(len(obj)==6):
-          if first:
-            print(node.data.header)
-            first=False
-          pdata.append(obj)
-          i+=1
-      if i>=1000:
-        break
-    if i>=1000:
-      break
+    train_env = dill.load(f, encoding='latin1')
+    train_scenes = train_env.scenes
+    i = 0
+    # print(train_scenes)
+    first = True
+    for x in train_scenes:
+        for node in x.nodes:
+            for obj in node.data.data:
+                if(len(obj) == 12):
+                    if first:
+                        print(node.data.header)
+                        first = False
+                    vdata.append(obj)
+                    i += 1
+            if i >= 1000:
+                break
+        if i >= 1000:
+            break
+    i = 0
+    first = True
+    for x in train_scenes:
+        for node in x.nodes:
+            for obj in node.data.data:
+                if(len(obj) == 6):
+                    if first:
+                        print(node.data.header)
+                        first = False
+                    pdata.append(obj)
+                    i += 1
+            if i >= 1000:
+                break
+        if i >= 1000:
+            break
 
 with open('pandaset_v.csv', 'w') as csvf:
-  writer = csv.writer(csvf)
-  writer.writerows(vdata)
+    writer = csv.writer(csvf)
+    writer.writerows(vdata)
 with open('pandaset_p.csv', 'w') as csvf:
-  writer = csv.writer(csvf)
-  writer.writerows(pdata)
+    writer = csv.writer(csvf)
+    writer.writerows(pdata)

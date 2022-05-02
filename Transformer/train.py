@@ -45,7 +45,8 @@ def main():
     hyperparams['autoregressive'] = args.autoregressive
 
     torch.autograd.set_detect_anomaly(True)
-    # This is needed for memory pinning using a DataLoader (otherwise memory is pinned to cuda:0 by default)
+    # This is needed for memory pinning using a DataLoader (otherwise memory
+    # is pinned to cuda:0 by default)
     torch.cuda.set_device(args.device)
     args.eval_device = args.device
     if args.seed is not None:
@@ -66,9 +67,11 @@ def main():
     if hyperparams['map_cnn_encoding']:
         print('| CNN encoding mode  %s' % hyperparams['map_cnn_encoding'])
     elif hyperparams['map_vit_encoding']:
-        print('| Vision transformer encoding mode  %s' % hyperparams['map_vit_encoding'])
+        print('| Vision transformer encoding mode  %s' %
+              hyperparams['map_vit_encoding'])
     elif hyperparams['lane_cnn_encoding']:
-        print('| CNN encoding lane mode  %s' % hyperparams['lane_cnn_encoding'])
+        print('| CNN encoding lane mode  %s' %
+              hyperparams['lane_cnn_encoding'])
     else:
         print('| Basic mode (No Map Information Encoding)  True')
     print('| Data augment mode  %s' % hyperparams['augment'])
@@ -114,23 +117,25 @@ def main():
     train_scenes = train_env.scenes
     train_scenes_sample_probs = train_env.scenes_freq_mult_prop if args.scene_freq_mult_train else None
 
-    train_dataset = EnvironmentDataset(train_env,
-                                       hyperparams['state'],
-                                       hyperparams['pred_state'],
-                                       scene_freq_mult=hyperparams['scene_freq_mult_train'],
-                                       node_freq_mult=hyperparams['node_freq_mult_train'],
-                                       hyperparams=hyperparams,
-                                       min_history_timesteps=hyperparams['minimum_history_length'],
-                                       min_future_timesteps=hyperparams['prediction_horizon'],
-                                       return_robot=not args.incl_robot_node)
+    train_dataset = EnvironmentDataset(
+        train_env,
+        hyperparams['state'],
+        hyperparams['pred_state'],
+        scene_freq_mult=hyperparams['scene_freq_mult_train'],
+        node_freq_mult=hyperparams['node_freq_mult_train'],
+        hyperparams=hyperparams,
+        min_history_timesteps=hyperparams['minimum_history_length'],
+        min_future_timesteps=hyperparams['prediction_horizon'],
+        return_robot=not args.incl_robot_node)
     train_data_loader = dict()
     for node_type_data_set in train_dataset:
-        node_type_dataloader = utils.data.DataLoader(node_type_data_set,
-                                                     collate_fn=collate,
-                                                     pin_memory=False if args.device == 'cpu' else True,
-                                                     batch_size=args.batch_size,
-                                                     shuffle=True,
-                                                     num_workers=args.preprocess_workers)
+        node_type_dataloader = utils.data.DataLoader(
+            node_type_data_set,
+            collate_fn=collate,
+            pin_memory=False if args.device == 'cpu' else True,
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=args.preprocess_workers)
         train_data_loader[node_type_data_set.node_type] = node_type_dataloader
 
     print(f"Loaded training data from {train_data_path}")
@@ -161,23 +166,25 @@ def main():
         eval_scenes = eval_env.scenes
         eval_scenes_sample_probs = eval_env.scenes_freq_mult_prop if args.scene_freq_mult_eval else None
 
-        eval_dataset = EnvironmentDataset(eval_env,
-                                          hyperparams['state'],
-                                          hyperparams['pred_state'],
-                                          scene_freq_mult=hyperparams['scene_freq_mult_eval'],
-                                          node_freq_mult=hyperparams['node_freq_mult_eval'],
-                                          hyperparams=hyperparams,
-                                          min_history_timesteps=hyperparams['minimum_history_length'],
-                                          min_future_timesteps=hyperparams['prediction_horizon'],
-                                          return_robot=not args.incl_robot_node)
+        eval_dataset = EnvironmentDataset(
+            eval_env,
+            hyperparams['state'],
+            hyperparams['pred_state'],
+            scene_freq_mult=hyperparams['scene_freq_mult_eval'],
+            node_freq_mult=hyperparams['node_freq_mult_eval'],
+            hyperparams=hyperparams,
+            min_history_timesteps=hyperparams['minimum_history_length'],
+            min_future_timesteps=hyperparams['prediction_horizon'],
+            return_robot=not args.incl_robot_node)
         eval_data_loader = dict()
         for node_type_data_set in eval_dataset:
-            node_type_dataloader = utils.data.DataLoader(node_type_data_set,
-                                                         collate_fn=collate,
-                                                         pin_memory=False if args.eval_device == 'cpu' else True,
-                                                         batch_size=args.eval_batch_size,
-                                                         shuffle=True,
-                                                         num_workers=args.preprocess_workers)
+            node_type_dataloader = utils.data.DataLoader(
+                node_type_data_set,
+                collate_fn=collate,
+                pin_memory=False if args.eval_device == 'cpu' else True,
+                batch_size=args.eval_batch_size,
+                shuffle=True,
+                num_workers=args.preprocess_workers)
             eval_data_loader[node_type_data_set.node_type] = node_type_dataloader
 
         print(f"Loaded evaluation data from {eval_data_path}")
@@ -208,16 +215,16 @@ def main():
     for node_type in train_env.NodeType:
         if node_type not in hyperparams['pred_state']:
             continue
-        optimizer[node_type] = optim.AdamW([{'params': model_registrar.get_all_but_name_match('map_encoder').parameters()},
-                                           {'params': model_registrar.get_name_match('map_encoder').parameters(), 'lr': 0.0008}], lr=hyperparams['learning_rate'])
+        optimizer[node_type] = optim.AdamW([{'params': model_registrar.get_all_but_name_match('map_encoder').parameters()}, {
+                                           'params': model_registrar.get_name_match('map_encoder').parameters(), 'lr': 0.0008}], lr=hyperparams['learning_rate'])
         # print("\nmodel_parameter : ",model_registrar.model_dict)
         # Set Learning Rate
         if hyperparams['learning_rate_style'] == 'const':
             lr_scheduler[node_type] = optim.lr_scheduler.ExponentialLR(
                 optimizer[node_type], gamma=1.0)
         elif hyperparams['learning_rate_style'] == 'exp':
-            lr_scheduler[node_type] = optim.lr_scheduler.ExponentialLR(optimizer[node_type],
-                                                                       gamma=hyperparams['learning_decay_rate'])
+            lr_scheduler[node_type] = optim.lr_scheduler.ExponentialLR(
+                optimizer[node_type], gamma=hyperparams['learning_decay_rate'])
 
     #################################
     #           TRAINING            #
@@ -236,7 +243,8 @@ def main():
                 trajectron.set_curr_iter(curr_iter)
                 optimizer[node_type].zero_grad()
                 train_loss, reg_loss = trajectron.train_loss(batch, node_type)
-                pbar.set_description(f"Epoch {epoch}, {node_type} L: {reg_loss.item()*80:.4f}")
+                pbar.set_description(
+                    f"Epoch {epoch}, {node_type} L: {reg_loss.item()*80:.4f}")
                 train_loss.backward()
                 # Clipping gradients.
                 if hyperparams['grad_clip'] is not None:
@@ -247,11 +255,12 @@ def main():
                 # Stepping forward the learning rate scheduler and annealers.
                 lr_scheduler[node_type].step()
                 if not args.debug:
-                    log_writer.add_scalar(f"{node_type}/train/learning_rate",
-                                          lr_scheduler[node_type].get_last_lr()[
-                                              0],
-                                          curr_iter)
-                    log_writer.add_scalar(f"{node_type}/train/loss", train_loss, curr_iter)
+                    log_writer.add_scalar(
+                        f"{node_type}/train/learning_rate",
+                        lr_scheduler[node_type].get_last_lr()[0],
+                        curr_iter)
+                    log_writer.add_scalar(
+                        f"{node_type}/train/loss", train_loss, curr_iter)
 
                 curr_iter += 1
             curr_iter_node_type[node_type] = curr_iter
@@ -283,12 +292,13 @@ def main():
 
                 # Plot predicted timestep for random scene
                 fig, ax = plt.subplots(figsize=(10, 10))
-                visualization.visualize_prediction(ax,
-                                                   predictions,
-                                                   scene.dt,
-                                                   max_hl=max_hl,
-                                                   ph=ph,
-                                                   map=scene.map['VISUALIZATION'] if scene.map is not None else None)
+                visualization.visualize_prediction(
+                    ax,
+                    predictions,
+                    scene.dt,
+                    max_hl=max_hl,
+                    ph=ph,
+                    map=scene.map['VISUALIZATION'] if scene.map is not None else None)
                 ax.set_title(f"{scene.name}-t: {timestep}")
                 log_writer.add_figure('train/prediction', fig, epoch)
 
@@ -310,12 +320,13 @@ def main():
 
                 # Plot predicted timestep for random scene
                 fig, ax = plt.subplots(figsize=(10, 10))
-                visualization.visualize_prediction(ax,
-                                                   predictions,
-                                                   scene.dt,
-                                                   max_hl=max_hl,
-                                                   ph=ph,
-                                                   map=scene.map['VISUALIZATION'] if scene.map is not None else None)
+                visualization.visualize_prediction(
+                    ax,
+                    predictions,
+                    scene.dt,
+                    max_hl=max_hl,
+                    ph=ph,
+                    map=scene.map['VISUALIZATION'] if scene.map is not None else None)
                 ax.set_title(f"{scene.name}-t: {timestep}")
                 log_writer.add_figure('eval/prediction', fig, epoch)
 
@@ -331,12 +342,13 @@ def main():
 
                 # Plot predicted timestep for random scene
                 fig, ax = plt.subplots(figsize=(10, 10))
-                visualization.visualize_prediction(ax,
-                                                   predictions,
-                                                   scene.dt,
-                                                   max_hl=max_hl,
-                                                   ph=ph,
-                                                   map=scene.map['VISUALIZATION'] if scene.map is not None else None)
+                visualization.visualize_prediction(
+                    ax,
+                    predictions,
+                    scene.dt,
+                    max_hl=max_hl,
+                    ph=ph,
+                    map=scene.map['VISUALIZATION'] if scene.map is not None else None)
                 ax.set_title(f"{scene.name}-t: {timestep}")
                 log_writer.add_figure('eval/prediction_all_z', fig, epoch)
 
@@ -353,12 +365,14 @@ def main():
                     if node_type == "PEDESTRIAN":
                         continue
                     eval_loss = []
-                    print(f"Starting Evaluation @ epoch {epoch} for node type: {node_type}")
+                    print(
+                        f"Starting Evaluation @ epoch {epoch} for node type: {node_type}")
                     pbar = tqdm(data_loader, ncols=80)
                     for batch in pbar:
                         eval_loss_node_type, reg_loss = eval_trajectron.eval_loss(
                             batch, node_type)
-                        pbar.set_description(f"Epoch {epoch}, {node_type} L: {reg_loss.item():.4f}")
+                        pbar.set_description(
+                            f"Epoch {epoch}, {node_type} L: {reg_loss.item():.4f}")
                         eval_loss.append(
                             {node_type: {'nll': [eval_loss_node_type]}})
                         del batch
@@ -385,7 +399,7 @@ def main():
                 #                                                                  max_hl=max_hl,
                 #                                                                  ph=ph,
                 #                                                                  node_type_enum=eval_env.NodeType,
-                #                                                                  map=scene.map))
+                # map=scene.map))
 
                 # evaluation.log_batch_errors(eval_batch_errors,
                 #                             log_writer,
@@ -414,7 +428,7 @@ def main():
                 #                                                                     ph=ph,
                 #                                                                     map=scene.map,
                 #                                                                     node_type_enum=eval_env.NodeType,
-                #                                                                     kde=False))
+                # kde=False))
 
                 # evaluation.log_batch_errors(eval_batch_errors_ml,
                 #                             log_writer,

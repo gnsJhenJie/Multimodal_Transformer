@@ -1,3 +1,9 @@
+from scipy.interpolate import RectBivariateSpline
+import utils
+import evaluation
+from model.trajectron import Trajectron
+from model.model_registrar import ModelRegistrar
+from tqdm import tqdm
 import sys
 import os
 import dill
@@ -8,12 +14,6 @@ import numpy as np
 import pandas as pd
 
 sys.path.append("../../trajectron")
-from tqdm import tqdm
-from model.model_registrar import ModelRegistrar
-from model.trajectron import Trajectron
-import evaluation
-import utils
-from scipy.interpolate import RectBivariateSpline
 
 seed = 0
 np.random.seed(seed)
@@ -23,12 +23,14 @@ if torch.cuda.is_available():
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", help="model full path", type=str)
-parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=int)
+parser.add_argument(
+    "--checkpoint", help="model checkpoint to evaluate", type=int)
 parser.add_argument("--data", help="full path to data file", type=str)
 parser.add_argument("--output_path", help="path to output csv file", type=str)
 parser.add_argument("--output_tag", help="name tag for output file", type=str)
 parser.add_argument("--node_type", help="node type to evaluate", type=str)
-parser.add_argument("--prediction_horizon", nargs='+', help="prediction horizon", type=int, default=None)
+parser.add_argument("--prediction_horizon", nargs='+',
+                    help="prediction horizon", type=int, default=None)
 args = parser.parse_args()
 
 
@@ -43,8 +45,10 @@ def compute_road_violations(predicted_trajs, map, channel):
     old_shape = predicted_trajs.shape
     pred_trajs_map = map.to_map_points(predicted_trajs.reshape((-1, 2)))
 
-    traj_obs_values = interp_obs_map(pred_trajs_map[:, 0], pred_trajs_map[:, 1], grid=False)
-    traj_obs_values = traj_obs_values.reshape((old_shape[0], old_shape[1], old_shape[2]))
+    traj_obs_values = interp_obs_map(
+        pred_trajs_map[:, 0], pred_trajs_map[:, 1], grid=False)
+    traj_obs_values = traj_obs_values.reshape(
+        (old_shape[0], old_shape[1], old_shape[2]))
     num_viol_trajs = np.sum(traj_obs_values.max(axis=2) > 0, dtype=float)
 
     return num_viol_trajs
@@ -71,8 +75,10 @@ if __name__ == "__main__":
 
     if 'override_attention_radius' in hyperparams:
         for attention_radius_override in hyperparams['override_attention_radius']:
-            node_type1, node_type2, attention_radius = attention_radius_override.split(' ')
-            env.attention_radius[(node_type1, node_type2)] = float(attention_radius)
+            node_type1, node_type2, attention_radius = attention_radius_override.split(
+                ' ')
+            env.attention_radius[(node_type1, node_type2)
+                                 ] = float(attention_radius)
 
     scenes = env.scenes
 
@@ -95,34 +101,37 @@ if __name__ == "__main__":
             for scene in tqdm(scenes):
                 timesteps = np.arange(scene.timesteps)
 
-                predictions = eval_stg.predict(scene,
-                                               timesteps,
-                                               ph,
-                                               num_samples=1,
-                                               min_history_timesteps=hyperparams['minimum_history_length'],
-                                               min_future_timesteps=ph,
-                                               z_mode=True,
-                                               gmm_mode=True,
-                                               full_dist=False)  # This will trigger grid sampling
+                predictions = eval_stg.predict(
+                    scene,
+                    timesteps,
+                    ph,
+                    num_samples=1,
+                    min_history_timesteps=hyperparams['minimum_history_length'],
+                    min_future_timesteps=ph,
+                    z_mode=True,
+                    gmm_mode=True,
+                    full_dist=False)  # This will trigger grid sampling
 
-                batch_error_dict = evaluation.compute_batch_statistics(predictions,
-                                                                       scene.dt,
-                                                                       max_hl=max_hl,
-                                                                       ph=ph,
-                                                                       node_type_enum=env.NodeType,
-                                                                       map=None,
-                                                                       prune_ph_to_future=False,
-                                                                       kde=False)
+                batch_error_dict = evaluation.compute_batch_statistics(
+                    predictions,
+                    scene.dt,
+                    max_hl=max_hl,
+                    ph=ph,
+                    node_type_enum=env.NodeType,
+                    map=None,
+                    prune_ph_to_future=False,
+                    kde=False)
 
-                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
-                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
+                eval_ade_batch_errors = np.hstack(
+                    (eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
+                eval_fde_batch_errors = np.hstack(
+                    (eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
 
             print(np.mean(eval_fde_batch_errors))
-            pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'ml'}
-                         ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_most_likely_z.csv'))
-            pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'ml'}
-                         ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_most_likely_z.csv'))
-
+            pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'ml'}).to_csv(
+                os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_most_likely_z.csv'))
+            pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'ml'}).to_csv(
+                os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_most_likely_z.csv'))
 
             ############### FULL ###############
             eval_ade_batch_errors = np.array([])
@@ -144,11 +153,8 @@ if __name__ == "__main__":
                 if not predictions:
                     continue
 
-                prediction_dict, _, _ = utils.prediction_output_to_trajectories(predictions,
-                                                                                scene.dt,
-                                                                                max_hl,
-                                                                                ph,
-                                                                                prune_ph_to_future=False)
+                prediction_dict, _, _ = utils.prediction_output_to_trajectories(
+                    predictions, scene.dt, max_hl, ph, prune_ph_to_future=False)
 
                 eval_road_viols_batch = []
                 for t in prediction_dict.keys():
@@ -162,25 +168,30 @@ if __name__ == "__main__":
 
                             eval_road_viols_batch.append(viols)
 
-                eval_road_viols = np.hstack((eval_road_viols, eval_road_viols_batch))
+                eval_road_viols = np.hstack(
+                    (eval_road_viols, eval_road_viols_batch))
 
-                batch_error_dict = evaluation.compute_batch_statistics(predictions,
-                                                                       scene.dt,
-                                                                       max_hl=max_hl,
-                                                                       ph=ph,
-                                                                       node_type_enum=env.NodeType,
-                                                                       map=None,
-                                                                       prune_ph_to_future=False)
+                batch_error_dict = evaluation.compute_batch_statistics(
+                    predictions,
+                    scene.dt,
+                    max_hl=max_hl,
+                    ph=ph,
+                    node_type_enum=env.NodeType,
+                    map=None,
+                    prune_ph_to_future=False)
 
-                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
-                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
-                eval_kde_nll = np.hstack((eval_kde_nll, batch_error_dict[args.node_type]['kde']))
+                eval_ade_batch_errors = np.hstack(
+                    (eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
+                eval_fde_batch_errors = np.hstack(
+                    (eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
+                eval_kde_nll = np.hstack(
+                    (eval_kde_nll, batch_error_dict[args.node_type]['kde']))
 
-        pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_full.csv'))
-        pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_full.csv'))
-        pd.DataFrame({'value': eval_kde_nll, 'metric': 'kde', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_kde_full.csv'))
-        pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_rv_full.csv'))
+        pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_full.csv'))
+        pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_full.csv'))
+        pd.DataFrame({'value': eval_kde_nll, 'metric': 'kde', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_kde_full.csv'))
+        pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}).to_csv(
+            os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_rv_full.csv'))

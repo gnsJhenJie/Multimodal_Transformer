@@ -14,7 +14,9 @@ class ModeKeys(Enum):
 
 def cyclical_lr(stepsize, min_lr=3e-4, max_lr=3e-3, decay=1.):
     # Lambda function to calculate the LR
-    lr_lambda = lambda it: min_lr + (max_lr - min_lr) * relative(it, stepsize) * decay**it
+    def lr_lambda(it):
+        return min_lr + (max_lr - min_lr) * \
+        relative(it, stepsize) * decay**it
 
     # Additional function to see where on the cycle we are
     def relative(it, stepsize):
@@ -34,16 +36,20 @@ def exp_anneal(anneal_kws):
     start = torch.tensor(anneal_kws['start'], device=device)
     finish = torch.tensor(anneal_kws['finish'], device=device)
     rate = torch.tensor(anneal_kws['rate'], device=device)
-    return lambda step: finish - (finish - start)*torch.pow(rate, torch.tensor(step, dtype=torch.float, device=device))
+    return lambda step: finish - \
+        (finish - start) * torch.pow(rate, torch.tensor(step, dtype=torch.float, device=device))
 
 
 def sigmoid_anneal(anneal_kws):
     device = anneal_kws['device']
     start = torch.tensor(anneal_kws['start'], device=device)
     finish = torch.tensor(anneal_kws['finish'], device=device)
-    center_step = torch.tensor(anneal_kws['center_step'], device=device, dtype=torch.float)
-    steps_lo_to_hi = torch.tensor(anneal_kws['steps_lo_to_hi'], device=device, dtype=torch.float)
-    return lambda step: start + (finish - start)*torch.sigmoid((torch.tensor(float(step), device=device) - center_step) * (1./steps_lo_to_hi))
+    center_step = torch.tensor(
+        anneal_kws['center_step'], device=device, dtype=torch.float)
+    steps_lo_to_hi = torch.tensor(
+        anneal_kws['steps_lo_to_hi'], device=device, dtype=torch.float)
+    return lambda step: start + (finish - start) * torch.sigmoid(
+        (torch.tensor(float(step), device=device) - center_step) * (1. / steps_lo_to_hi))
 
 
 class CustomLR(torch.optim.lr_scheduler.LambdaLR):
@@ -61,7 +67,12 @@ def mutual_inf_mc(x_dist):
     return (H_y - x_dist.entropy().mean(dim=0)).sum()
 
 
-def run_lstm_on_variable_length_seqs(lstm_module, original_seqs, lower_indices=None, upper_indices=None, total_length=None):
+def run_lstm_on_variable_length_seqs(
+        lstm_module,
+        original_seqs,
+        lower_indices=None,
+        upper_indices=None,
+        total_length=None):
     bs, tf = original_seqs.shape[:2]
     if lower_indices is None:
         lower_indices = torch.zeros(bs, dtype=torch.int)

@@ -1,20 +1,24 @@
 import numpy as np
 
 
-import numpy as np
-
-
 class NonlinearKinematicBicycle:
     """
     Nonlinear Kalman Filter for a kinematic bicycle model, assuming constant longitudinal speed
     and constant heading array
     """
 
-    def __init__(self, dt, sPos=None, sHeading=None, sVel=None, sMeasurement=None):
+    def __init__(
+            self,
+            dt,
+            sPos=None,
+            sHeading=None,
+            sVel=None,
+            sMeasurement=None):
         self.dt = dt
 
         # measurement matrix
-        self.C = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        self.C = np.array([[1, 0, 0, 0], [0, 1, 0, 0],
+                           [0, 0, 1, 0], [0, 0, 0, 1]])
 
         # default noise covariance
         if (sPos is None) and (sHeading is None) and (sVel is None):
@@ -31,7 +35,8 @@ class NonlinearKinematicBicycle:
         # state transition noise
         self.Q = np.diag([sPos ** 2, sPos ** 2, sHeading ** 2, sVel ** 2])
         # measurement noise
-        self.R = np.diag([sMeasurement ** 2, sMeasurement ** 2, sMeasurement ** 2, sMeasurement ** 2])
+        self.R = np.diag([sMeasurement ** 2, sMeasurement **
+                          2, sMeasurement ** 2, sMeasurement ** 2])
 
     def predict_and_update(self, x_vec_est, u_vec, P_matrix, z_new):
         """
@@ -43,7 +48,7 @@ class NonlinearKinematicBicycle:
         :return:
         """
 
-        ## Prediction Step
+        # Prediction Step
         # predicted state estimate
         x_pred = self._kinematic_bicycle_model_rearCG(x_vec_est, u_vec)
         # Compute Jacobian to obtain the state transition matrix
@@ -51,7 +56,7 @@ class NonlinearKinematicBicycle:
         # predicted error covariance
         P_pred = A.dot(P_matrix.dot(A.transpose())) + self.Q
 
-        ## Update Step
+        # Update Step
         # innovation or measurement pre-fit residual
         y_telda = z_new - self.C.dot(x_pred)
         # innovation covariance
@@ -86,17 +91,14 @@ class NonlinearKinematicBicycle:
         x_new[0] = x + self.dt * vel * np.cos(psi + delta)
         x_new[1] = y + self.dt * vel * np.sin(psi + delta)
         x_new[2] = psi + self.dt * delta
-        #x_new[2] = _heading_angle_correction(x_new[2])
+        # x_new[2] = _heading_angle_correction(x_new[2])
         x_new[3] = vel + self.dt * acc
 
         return x_new
 
     def _cal_state_Jacobian(self, x_vec, u_vec):
-        acc = u_vec[0]
         delta = u_vec[1]
 
-        x = x_vec[0]
-        y = x_vec[1]
         psi = x_vec[2]
         vel = x_vec[3]
 

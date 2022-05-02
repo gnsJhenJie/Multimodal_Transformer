@@ -1,11 +1,11 @@
+from Transformer.nn_component import Lane_Encoder
 import unittest
 import torch
-import sys
 
-sys.path.append('./Transformer')
-from model.nn_component import Lane_Encoder
 
-class Test_Neural_Network(unittest.TestCase):
+class TestNeuralNetwork(unittest.TestCase):
+    """Testing class for nn_component"""
+
     def setUp(self):
         self.test_item = []
         self.dictionary = {
@@ -23,6 +23,7 @@ class Test_Neural_Network(unittest.TestCase):
         }
 
     def test_shape(self):
+        """Test the output shape of nn_component"""
         me_params = self.dictionary["lane_encoder"]["VEHICLE"]
         test = Lane_Encoder(
             me_params["layers"],
@@ -36,9 +37,12 @@ class Test_Neural_Network(unittest.TestCase):
         batch_size = 256
         max_lane_num = 3
         input_dim = 10
-        input = torch.randn(256, 3, 2, input_dim).view(256 * 3, 2, input_dim)
-        output = test(input).view(256, 3, 32)
-        assert output.size() == (batch_size, max_lane_num, me_params['output_size'])
+        input_tensor = torch.randn(
+            256, 3, 2, input_dim).view(256 * 3, 2, input_dim)
+        output = test(input_tensor).view(256, 3, 32)
+        assert output.size() == (batch_size, max_lane_num,
+                                 me_params["output_size"])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

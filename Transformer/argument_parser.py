@@ -1,10 +1,11 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--conf",
-                    help="path to json config file for hyperparameters",
-                    type=str,
-                    default='../experiments/offline_process/models/int_ee/config.json')
+parser.add_argument(
+    "--conf",
+    help="path to json config file for hyperparameters",
+    type=str,
+    default='../experiments/offline_process/models/int_ee/config.json')
 
 parser.add_argument("--debug",
                     help="disable all disk writing processes.",
@@ -17,14 +18,16 @@ parser.add_argument("--preprocess_workers",
 
 # Model Parameters
 
-parser.add_argument('--override_attention_radius',
-                    action='append',
-                    help='Specify one attention radius to override. E.g. "PEDESTRIAN VEHICLE 10.0"',
-                    default=[])
+parser.add_argument(
+    '--override_attention_radius',
+    action='append',
+    help='Specify one attention radius to override. E.g. "PEDESTRIAN VEHICLE 10.0"',
+    default=[])
 
-parser.add_argument('--incl_robot_node',
-                    help="whether to include a robot node in the graph or simply model all agents",
-                    action='store_true')
+parser.add_argument(
+    '--incl_robot_node',
+    help="whether to include a robot node in the graph or simply model all agents",
+    action='store_true')
 
 parser.add_argument('--map_cnn_encoding',
                     help="Whether to use map encoding or not",
@@ -42,25 +45,30 @@ parser.add_argument('--augment',
                     help="Whether to augment the scene during training",
                     action='store_true')
 
-parser.add_argument('--node_freq_mult_train',
-                    help="Whether to use frequency multiplying of nodes during training",
-                    action='store_true')
+parser.add_argument(
+    '--node_freq_mult_train',
+    help="Whether to use frequency multiplying of nodes during training",
+    action='store_true')
 
-parser.add_argument('--node_freq_mult_eval',
-                    help="Whether to use frequency multiplying of nodes during evaluation",
-                    action='store_true')
+parser.add_argument(
+    '--node_freq_mult_eval',
+    help="Whether to use frequency multiplying of nodes during evaluation",
+    action='store_true')
 
-parser.add_argument('--scene_freq_mult_train',
-                    help="Whether to use frequency multiplying of nodes during training",
-                    action='store_true')
+parser.add_argument(
+    '--scene_freq_mult_train',
+    help="Whether to use frequency multiplying of nodes during training",
+    action='store_true')
 
-parser.add_argument('--scene_freq_mult_eval',
-                    help="Whether to use frequency multiplying of nodes during evaluation",
-                    action='store_true')
+parser.add_argument(
+    '--scene_freq_mult_eval',
+    help="Whether to use frequency multiplying of nodes during evaluation",
+    action='store_true')
 
-parser.add_argument('--scene_freq_mult_viz',
-                    help="Whether to use frequency multiplying of nodes during evaluation",
-                    action='store_true')
+parser.add_argument(
+    '--scene_freq_mult_viz',
+    help="Whether to use frequency multiplying of nodes during evaluation",
+    action='store_true')
 
 parser.add_argument('--no_edge_encoding',
                     help="Whether to use neighbors edge encoding",
@@ -82,10 +90,11 @@ parser.add_argument("--data_name",
                     type=str,
                     default='nuScenes')
 
-parser.add_argument("--log_dir",
-                    help="what dir to save training information (i.e., saved models, logs, etc)",
-                    type=str,
-                    default='../experiments/offline_process/models')
+parser.add_argument(
+    "--log_dir",
+    help="what dir to save training information (i.e., saved models, logs, etc)",
+    type=str,
+    default='../experiments/offline_process/models')
 
 parser.add_argument("--log_tag",
                     help="tag for the log folder",
@@ -128,15 +137,17 @@ parser.add_argument('--seed',
                     type=int,
                     default=123)
 
-parser.add_argument('--eval_every',
-                    help='how often to evaluate during training, never if None',
-                    type=int,
-                    default=1)
+parser.add_argument(
+    '--eval_every',
+    help='how often to evaluate during training, never if None',
+    type=int,
+    default=1)
 
-parser.add_argument('--vis_every',
-                    help='how often to visualize during training, never if None',
-                    type=int,
-                    default=1)
+parser.add_argument(
+    '--vis_every',
+    help='how often to visualize during training, never if None',
+    type=int,
+    default=1)
 
 parser.add_argument('--save_every',
                     help='how often to save during training, never if None',

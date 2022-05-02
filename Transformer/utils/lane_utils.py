@@ -96,7 +96,12 @@ def get_closest_lane(nusc_map, x, y, radius):
         return min_id, 'lane_connector'
 
 
-def get_same_direction_lanes(lane_dict, lanes_id, agent, angle_threshold, stop_threshold):
+def get_same_direction_lanes(
+        lane_dict,
+        lanes_id,
+        agent,
+        angle_threshold,
+        stop_threshold):
     '''
     remain Lanes which is same direction as agent
     :method calculate the angle between lane direction vector and agent direction vector
@@ -145,7 +150,8 @@ def get_future_lanes(lane_dict, lanes_id, agent):
     '''
 
     future_lanes_id = list()
-    # orthogonal to agent_direction (or closest lane direction if agent is stop)
+    # orthogonal to agent_direction (or closest lane direction if agent is
+    # stop)
     slope = agent.get_attribute('orthogonal_slope')
     bias = agent.get_attribute('orthogonal_bias')
     past_point = agent.get_attribute('past_pos')
@@ -162,7 +168,8 @@ def get_future_lanes(lane_dict, lanes_id, agent):
         i = lane_class.get_attribute('nearest_point_index')
         lane_flag = agent_flag
         # if there is one lane point in front of agent add in the dict
-        while lane_flag == agent_flag and i in range(lane_class.get_attribute('nearest_point_index'), len(poses)):
+        while lane_flag == agent_flag and i in range(
+                lane_class.get_attribute('nearest_point_index'), len(poses)):
             lane_flag = bias - \
                 poses[i][0] > 0 if slope == 0 else poses[i][1] - \
                 slope * poses[i][0] - bias > 0
@@ -245,11 +252,17 @@ def get_nearest_lane(nusc_map, lane_dict, lanes_id, agent):
     nearest_lane.append(right_id)
     nearest_lane.append(closest_lane)
     nearest_lane.append(left_id)
-    
+
     return nearest_lane
 
 
-def get_future_80m_lane(nusc_map, cur_pos, lane_dict, lanes_id, resolution_meters, sample_num):
+def get_future_80m_lane(
+        nusc_map,
+        cur_pos,
+        lane_dict,
+        lanes_id,
+        resolution_meters,
+        sample_num):
     '''
     get 80m lanes points
     :param nusc_map: nuScenes map api class
@@ -264,7 +277,7 @@ def get_future_80m_lane(nusc_map, cur_pos, lane_dict, lanes_id, resolution_meter
     for lane_id in lanes_id:
 
         if lane_id == 0:  # 0 -> no lane
-            dummy_input = np.ones((sample_num, 2))*(-100)
+            dummy_input = np.ones((sample_num, 2)) * (-100)
             feature_lanes.append(dummy_input)
             continue
 
@@ -279,10 +292,12 @@ def get_future_80m_lane(nusc_map, cur_pos, lane_dict, lanes_id, resolution_meter
         # Determine the lane_set_points is enough or not
         if len(lane_set_points) >= sample_num:
             lane_set_points = lane_set_points[:sample_num]
-        # start lane set points less than sample_num , we extend the lane set points by other lane
+        # start lane set points less than sample_num , we extend the lane set
+        # points by other lane
         elif len(lane_set_points) < sample_num:
             while len(lane_set_points) < sample_num:
-                # get the extended point by the delta_pos of original lane set point
+                # get the extended point by the delta_pos of original lane set
+                # point
                 next_x = poses[-1][0] + (poses[-1][0] - poses[-2][0])
                 next_y = poses[-1][1] + (poses[-1][1] - poses[-2][1])
                 # get new lane by extended point
@@ -293,7 +308,8 @@ def get_future_80m_lane(nusc_map, cur_pos, lane_dict, lanes_id, resolution_meter
                     poses = arcline_path_utils.discretize_lane(
                         next_lane_record, resolution_meters=resolution_meters)
                     poses = np.array(poses)[:, :2]
-                    # store next_lane information (using extended point to search will always get the same result to same lane)
+                    # store next_lane information (using extended point to
+                    # search will always get the same result to same lane)
                     lane_dict[lane_id].set_next_lane_id(next_lane)
                     # if next_lane is not in dictionary store the info
                     if next_lane not in lane_dict.keys():
@@ -311,15 +327,23 @@ def get_future_80m_lane(nusc_map, cur_pos, lane_dict, lanes_id, resolution_meter
                     lane_set_points = lane_set_points[:sample_num]
 
                 lane_id = next_lane
-        
-        feature_lanes.append(lane_set_points-cur_pos)
-        
+
+        feature_lanes.append(lane_set_points - cur_pos)
+
     return np.array(feature_lanes)
 
 
-def get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius, angle_threshold=30, stop_threshold=0.5, resolution_meters=5, sample_num=10):
+def get_each_timestamp_lane(
+        nusc_map,
+        lane_dict,
+        agent_points,
+        radius,
+        angle_threshold=30,
+        stop_threshold=0.5,
+        resolution_meters=5,
+        sample_num=10):
     '''
-    To get each frame's lane and the groundtruth lane 
+    To get each frame's lane and the groundtruth lane
     (gt : 0,1,2,3) 0-> no lane 1 -> right 2 -> middle 3 -> left
     :param nusc_map: nuScenes API
     :param agent_points: each frame position.
@@ -330,10 +354,10 @@ def get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius, angle_thr
 
     total_lanes_set_point = list()
     total_lane_boolean = list()
-    dummy_input = np.zeros((3,sample_num, 2))
+    dummy_input = np.zeros((3, sample_num, 2))
     length_t = len(agent_points)
     try:
-    # print("agent_points : \n", agent_points)
+        # print("agent_points : \n", agent_points)
         for i in range(len(agent_points)):
             lane_exist = True
             # print("current index : ", i)
@@ -344,21 +368,35 @@ def get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius, angle_thr
             # i -> current pos, i-1 previous pos
             agent_class = agent(agent_points[i], agent_points[i - 1])
             lanes_id = get_around_lane(
-                nusc_map, lane_dict, agent_class, radius=radius, resolution_meters=0.1)
+                nusc_map,
+                lane_dict,
+                agent_class,
+                radius=radius,
+                resolution_meters=0.1)
             lanes_id = get_same_direction_lanes(
-                lane_dict, lanes_id, agent_class, angle_threshold=angle_threshold, stop_threshold=stop_threshold)
+                lane_dict,
+                lanes_id,
+                agent_class,
+                angle_threshold=angle_threshold,
+                stop_threshold=stop_threshold)
             lanes_id = get_future_lanes(lane_dict, lanes_id, agent_class)
             lanes_id = get_nearest_lane(
                 nusc_map, lane_dict, lanes_id, agent_class)
-            total_lanes_set_point.append(get_future_80m_lane(
-                nusc_map, agent_points[i],lane_dict, lanes_id, resolution_meters, sample_num))
+            total_lanes_set_point.append(
+                get_future_80m_lane(
+                    nusc_map,
+                    agent_points[i],
+                    lane_dict,
+                    lanes_id,
+                    resolution_meters,
+                    sample_num))
             total_lane_boolean.append(lane_exist)
     except other_error as error:
         # print(error)
-        return False, None , None
-    except:
+        return False, None, None
+    except BaseException:
         # print("Other exceptions!")
-        return False, None , None
+        return False, None, None
 
     return True, np.array(total_lanes_set_point), np.array(total_lane_boolean)
 
@@ -392,7 +430,8 @@ def get_each_timestamp_lane(nusc_map, lane_dict, agent_points, radius, angle_thr
 #             if not j :
 #                 ax.plot(feature_lane_point[0], feature_lane_point[1],'bo', markersize=3) # start_pose
 #             else:
-#                 ax.plot(feature_lane_point[0], feature_lane_point[1], c=clr, marker='o', markersize=2) # remain_pose
+# ax.plot(feature_lane_point[0], feature_lane_point[1], c=clr, marker='o',
+# markersize=2) # remain_pose
 
 #     ax.plot(point[1][0], point[1][1],'co') #青色實心(前一幀)
 #     ax.plot(point[0][0], point[0][1],'wo') #白色實心(現在)

@@ -7,7 +7,8 @@ from model.components import GMM2D
 class SingleIntegrator(Dynamic):
     def init_constants(self):
         self.F = torch.eye(4, device=self.device, dtype=torch.float32)
-        self.F[0:2, 2:] = torch.eye(2, device=self.device, dtype=torch.float32) * self.dt
+        self.F[0:2, 2:] = torch.eye(
+            2, device=self.device, dtype=torch.float32) * self.dt
         self.F_t = self.F.transpose(-2, -1)
 
     def integrate_samples(self, v, x=None):
@@ -52,13 +53,17 @@ class SingleIntegrator(Dynamic):
         pos_mus = p_0[:, None] + torch.cumsum(v_dist.mus, dim=2) * self.dt
 
         vel_dist_sigma_matrix = v_dist.get_covariance_matrix()
-        pos_dist_sigma_matrix_t = torch.zeros(sample_batch_dim + [v_dist.components, 2, 2], device=self.device)
+        pos_dist_sigma_matrix_t = torch.zeros(
+            sample_batch_dim + [v_dist.components, 2, 2], device=self.device)
 
         for t in range(ph):
             vel_sigma_matrix_t = vel_dist_sigma_matrix[:, :, t]
-            full_sigma_matrix_t = block_diag([pos_dist_sigma_matrix_t, vel_sigma_matrix_t])
-            pos_dist_sigma_matrix_t = self.F[..., :2, :].matmul(full_sigma_matrix_t.matmul(self.F_t)[..., :2])
+            full_sigma_matrix_t = block_diag(
+                [pos_dist_sigma_matrix_t, vel_sigma_matrix_t])
+            pos_dist_sigma_matrix_t = self.F[..., :2, :].matmul(
+                full_sigma_matrix_t.matmul(self.F_t)[..., :2])
             pos_dist_sigma_matrix_list.append(pos_dist_sigma_matrix_t)
 
         pos_dist_sigma_matrix = torch.stack(pos_dist_sigma_matrix_list, dim=2)
-        return GMM2D.from_log_pis_mus_cov_mats(v_dist.log_pis, pos_mus, pos_dist_sigma_matrix)
+        return GMM2D.from_log_pis_mus_cov_mats(
+            v_dist.log_pis, pos_mus, pos_dist_sigma_matrix)

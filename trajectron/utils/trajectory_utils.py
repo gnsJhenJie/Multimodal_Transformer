@@ -23,7 +23,8 @@ def prediction_output_to_trajectories(prediction_output_dict,
             predictions_output = prediction_output_dict[t][node]
             position_state = {'position': ['x', 'y']}
 
-            history = node.get(np.array([t - max_h, t]), position_state)  # History includes current pos
+            # History includes current pos
+            history = node.get(np.array([t - max_h, t]), position_state)
             history = history[~np.isnan(history.sum(axis=1))]
 
             future = node.get(np.array([t + 1, t + ph]), position_state)
