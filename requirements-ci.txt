@@ -1,0 +1,15 @@
+dill==0.3.4
+matplotlib==3.5.1
+ncls==0.0.64
+numpy==1.22.3
+orjson==3.6.8
+pandas==1.4.2
+pyquaternion==0.9.9
+pytest==7.1.2
+scikit_learn==1.0.2
+scipy==1.8.0
+seaborn==0.11.2
+tensorboardX==2.5
+torch==1.11.0
+tqdm==4.64.0
+vit_pytorch==0.33.2
